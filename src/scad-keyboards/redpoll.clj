@@ -48,8 +48,8 @@
 
 
 (defn place-shape [shape [offset-x offset-y] staggers [row col]]
-  (let [{{dist-x :x} :key-distance
-         {dist-y :y} :key-distance
+  (let [{{dist-x :x
+          dist-y :y} :key-distance
          angle :opening-angle} config]
     (->> shape
          (translate [(* row dist-x) 
@@ -61,22 +61,18 @@
          )))
 
 (defn single-hole [kerf]
-  (let [{{cutout-width :x} :cutout-dimensions
-         {cutout-height :y} :cutout-dimensions} config]
+  (let [{{cutout-width :x
+          cutout-height :y} :cutout-dimensions} config]
     (cube (+ cutout-width kerf) cutout-height 25)))
 
 (defn place-at-finger-position [shape position]
   (let [{col-staggers :col-staggers
-         offset :mirror-offset
-         angle :opening-angle} config]
+         offset :mirror-offset} config]
     (place-shape shape offset col-staggers position)))
 
 (defn place-at-thumb-position [shape position]
-  (let [{col-staggers :col-staggers
-         offset :mirror-offset
-         thumb-staggers :thumb-staggers
-         thumb-offset :thumb-offset
-         angle :opening-angle} config]
+  (let [{thumb-staggers :thumb-staggers
+         thumb-offset :thumb-offset} config]
     (place-shape shape thumb-offset thumb-staggers position)))
 
 (defn place-at-key-positions [shape]
@@ -99,9 +95,9 @@
                 (map (partial place-at-thumb-position shape))))))
 
 (defn choc-keycap []
-  (let [{{cap-x :x} :keycap-dimensions
-         {cap-y :y} :keycap-dimensions
-         {cap-z :z} :keycap-dimensions} config]
+  (let [{{cap-x :x 
+          cap-y :y 
+          cap-z :z} :keycap-dimensions} config]
     (color [0.3 0.3 0.3 1]
            (cube cap-x cap-y cap-z))))
 
@@ -114,10 +110,10 @@
 (defn base-plate []
   (let [{plate-thickness :plate-thickness
          plate-border :plate-border
-         {cap-x :x} :keycap-dimensions
-         {cap-y :y} :keycap-dimensions
-         {mirror-y-min :min} :plate-mirror-edge
-         {mirror-y-max :max} :plate-mirror-edge} config
+         {cap-x :x 
+          cap-y :y} :keycap-dimensions
+         {mirror-y-min :min 
+          mirror-y-max :max} :plate-mirror-edge} config
         mirror-edge-helper (translate [0 (average mirror-y-max mirror-y-min) 0]
                                      (cube 0.1
                                            (- mirror-y-max mirror-y-min)
@@ -142,8 +138,8 @@
                                 (map (partial place-at-thumb-position hole)))))))
 
 (defn top-layer []
-  (let [{{cap-x :x} :keycap-dimensions
-         {cap-y :y} :keycap-dimensions
+  (let [{{cap-x :x
+          cap-y :y} :keycap-dimensions
          kerf :keycap-kerf} config
         base-plate (base-plate)
         cap-cutouts (place-at-key-positions (cube (+ cap-x (* 2 kerf)) 
@@ -187,7 +183,6 @@
     
 (defn frame-layer []
   (let [{plate-thickness :plate-thickness
-         angle :opening-angle
          strut-poss :strut-positions
          thumb-strut-poss :thumb-strut-positions} config
         base-plate (base-plate)
@@ -214,9 +209,8 @@
 
 
 
-(defn create-model []
-  (let [{plate-thickness :plate-thickness
-         {cap-y :y} :keycap-dimensions} config
+(defn create-model [config]
+  (let [{plate-thickness :plate-thickness} config
         keycaps (mirror-halves (place-at-key-positions (choc-keycap)))
         explode 1]
     (union
@@ -226,17 +220,15 @@
      (translate [0 0 (- (* 1 plate-thickness explode))] (plate-layer-lower))
      (translate [0 0 (- (* 2 plate-thickness explode))] (frame-layer))
      (translate [0 0 (- (* 3 plate-thickness explode))] (bottom-layer))
-     (->> (cube 200 200 5)
+     #_(->> (cube 200 200 5)
             (rotate (/ PI 4) [0 0 1])
             (translate [0 45 (- (* 4 plate-thickness explode))])
             (color [0.8 0.8 0.8 0.5])))) 
   )
 
 (defn create-multi-model []
-  (let [_ (def config (merge redpoll goldcrest))
-        goldcrest (create-model)
-        _ (def config redpoll)
-        redpoll (create-model)]
+  (let [goldcrest (create-model (merge redpoll goldcrest))
+        redpoll (create-model config)]
     (union redpoll
            #_(translate [0 150 0] goldcrest)
            )))

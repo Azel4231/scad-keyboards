@@ -33,17 +33,17 @@
                              :col-number 6
                              ; x, y, z
                              :offset [110 0 5]
-                             :staggers [{:y 4 :z -1} 
-                                        {:y 6 :z -3}
-                                        {:y 10 :z -5}
-                                        {:y 7 :z -4}
-                                        {:y 1 :z -1}
+                             :staggers [{:y 6 :z -2} 
+                                        {:y 9 :z -5}
+                                        {:y 15 :z -8}
+                                        {:y 10 :z -6}
+                                        {:y 2 :z -2}
                                         {:y 0 :z 0}]
                              :angles {:opening (deg2rad 18) ; like a door
                                       :gable (deg2rad 10)  ; like a key 
                                       :slope (deg2rad 0)}  ; like a laptop monitor
-                             :curvature {:row (deg2rad -6) :col (deg2rad -15)
-                                         :row-offset (deg2rad 25) :col-offset (deg2rad 15)}
+                             :curvature {:row (deg2rad -6) :col (deg2rad -25)
+                                         :row-offset (deg2rad 30) :col-offset (deg2rad 20)}
                              :excluded-grid-positions #{}
                              :additional-grid-positions #{}}
 

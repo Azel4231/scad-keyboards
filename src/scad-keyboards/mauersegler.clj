@@ -33,31 +33,31 @@
                              :col-number 6
                              ; x, y, z
                              :offset [110 0 5]
-                             :staggers [{:y 6 :z -2} 
+                             :staggers [{:y 6 :z -5} 
                                         {:y 9 :z -5}
                                         {:y 15 :z -8}
                                         {:y 10 :z -6}
                                         {:y 2 :z -2}
-                                        {:y 0 :z 0}]
+                                        {:y 0 :z -2}]
                              :angles {:opening (deg2rad 18) ; like a door
                                       :gable (deg2rad 10)  ; like a key 
                                       :slope (deg2rad 0)}  ; like a laptop monitor
-                             :curvature {:row (deg2rad -6) :col (deg2rad -25)
+                             :curvature {:row (deg2rad -6) :col (deg2rad -24)
                                          :row-offset (deg2rad 30) :col-offset (deg2rad 20)}
                              :excluded-grid-positions #{}
                              :additional-grid-positions #{}}
 
                    :thumbs {:row-number 1
                             :col-number 3
-                            :offset [-50 -60 -15]
+                            :offset [0 -50 15]
                             :staggers [{:y 0 :z 0}
                                        {:y 0 :z 0}
                                        {:y 0 :z 0}]
                             :angles {:opening (deg2rad 26)
                                      :gable (deg2rad -14)
                                      :slope (deg2rad 12)}
-                            :curvature {:row (deg2rad -6) :col (deg2rad -15)
-                                        :row-offset (deg2rad -20) :col-offset (deg2rad 15)}
+                            :curvature {:row (deg2rad -24) :col (deg2rad -6)
+                                        :row-offset (deg2rad 0) :col-offset (deg2rad 0)}
                             :excluded-grid-positions #{}
                             :additional-grid-positions #{}}})
 
@@ -85,7 +85,7 @@
         col-radius (- (/ dist-y (Math/sin curve-col)))
         row-radius (- (/ dist-x (Math/sin curve-row)))]
     #_(clojure.pprint/pprint config)
-    (println "col-radius " col-radius ", stagger-y " stagger-y ", stagger-z " stagger-z)
+    #_(println "col-radius " col-radius ", stagger-y " stagger-y ", stagger-z " stagger-z)
     (->> shape
          (translate [0 0 (- col-radius)])
          (rotate (+ (* curve-col row) curve-col-offset) [1 0 0])
@@ -123,7 +123,7 @@
          thumb-config :thumbs} config] 
     ; flatten config structure, i.e. make finger/thumb config top-level attributes .
     (concat (place-shape (merge config finger-config) shape)
-            #_(place-shape (merge config thumb-config) shape))))
+            (place-shape (merge config thumb-config) shape))))
 
 (defn keycap [cap-x cap-y cap-z]
   (color [0.3 0.3 0.3 1]

@@ -43,23 +43,23 @@
                                       :gable (deg2rad 10)  ; like a key 
                                       :slope (deg2rad 0)}  ; like a laptop monitor
                              :curvature {:row (deg2rad -6) :col (deg2rad -24)
-                                         :row-offset (deg2rad 30) :col-offset (deg2rad 20)}
+                                         :row-offset (deg2rad 35) :col-offset (deg2rad 35)}
                              :excluded-grid-positions #{}
                              :additional-grid-positions #{}}
 
                    :thumbs {:row-number 1
                             :col-number 3
-                            :offset [0 -50 15]
+                            :offset [-50 -30 -5]
                             :staggers [{:y 0 :z 0}
                                        {:y 0 :z 0}
                                        {:y 0 :z 0}]
                             :angles {:opening (deg2rad 26)
                                      :gable (deg2rad -14)
                                      :slope (deg2rad 12)}
-                            :curvature {:row (deg2rad -24) :col (deg2rad -6)
-                                        :row-offset (deg2rad 0) :col-offset (deg2rad 0)}
+                            :curvature {:row (deg2rad -28) :col (deg2rad -6)
+                                        :row-offset (deg2rad -38) :col-offset (deg2rad 0)}
                             :excluded-grid-positions #{}
-                            :additional-grid-positions #{}}})
+                            :additional-grid-positions #{[1 -1]}}})
 
 (defn deep-merge [a & maps]
   (if (map? a)
@@ -154,11 +154,11 @@
   (let [{{cap-x :x
           cap-y :y} :keycap-dimensions} config
         height 30]
-    (->> (case-shape plate-border height)
+    (->> (case-shape plate-border 10)
          (minkowski (cube (+ plate-border cap-x) (+ plate-border cap-y) 1))
          (place-at-key-positions config)
          (union)
-         (hull)
+         #_(hull)
          (difference-last (place-at-key-positions config
                                                   (translate [0 0 (/ height 2)]
                                                              (cube (+ cap-x (* 2 keycap-kerf))
@@ -172,17 +172,18 @@
          kerf :keycap-kerf
          {cut-x :x
           cut-y :y} :cutout-dimensions} config
-        height 30]
+        height 20]
     (-> (kb-case-raw config plate-border kerf)
         (difference (translate [0 0 (- case-thickness)] 
                                (kb-case-raw config 
                                             (- plate-border case-thickness)
                                             (+ kerf case-thickness))))
         (difference (place-at-key-positions config
-                     (cube  cut-x
-                            cut-y
-                            height)))
-        (difference (translate [0 0 -60] (cube 500 500 100)))
+                                            (translate [0 0 (/ height 4)]
+                                                       (cube  cut-x
+                                                              cut-y
+                                                              height))))
+        (difference (translate [0 0 -50] (cube 500 500 100)))
         )))
 
 (defn mirror-halves [shape]

@@ -32,33 +32,31 @@
                    :fingers {:row-number 3
                              :col-number 6
                              ; x, y, z
-                             :offset [120 0 15]
+                             :offset [65 0 25]
                              :staggers [{:y 6 :z -5} 
                                         {:y 9 :z -5}
                                         {:y 15 :z -8}
                                         {:y 10 :z -6}
                                         {:y 2 :z -2}
                                         {:y 0 :z -2}]
-                             :angles {:opening (deg2rad 18) ; like a door
-                                      :gable (deg2rad 10)  ; like a key 
-                                      :slope (deg2rad 0)}  ; like a laptop monitor
+                             :angles {:opening (deg2rad 0) ; like a door
+                                      :gable (deg2rad 20)  ; like a key 
+                                      :slope (deg2rad -18)}  ; like a laptop monitor
                              :curvature {:row (deg2rad -6) :col (deg2rad -32)
-                                         :row-offset (deg2rad 5) :col-offset (deg2rad -15)
-                                         :row-zero 1 :col-zero 5}
+                                         :row-zero 1 :col-zero 3}
                              :excluded-grid-positions #{}
                              :additional-grid-positions #{}}
 
                    :thumbs {:row-number 1
                             :col-number 3
-                            :offset [-43 -35 5]
+                            :offset [0 -23 30]
                             :staggers [{:y 0 :z 0}
                                        {:y 0 :z 0}
                                        {:y 0 :z 0}]
-                            :angles {:opening (deg2rad 26)
-                                     :gable (deg2rad -14)
-                                     :slope (deg2rad 12)}
+                            :angles {:opening (deg2rad 0)
+                                     :gable (deg2rad -60)
+                                     :slope (deg2rad 15)}
                             :curvature {:row (deg2rad -32) :col (deg2rad -6)
-                                        :row-offset (deg2rad -60) :col-offset (deg2rad 0)
                                         :row-zero 0 :col-zero 1}
                             :excluded-grid-positions #{[1 0]}
                             :additional-grid-positions #{[1 0.5] [1 -0.5]}}})
@@ -79,34 +77,31 @@
          offsets :offset
          {dist-x :x 
           dist-y :y} :key-distance
-         {curve-row :row
-          curve-row-offset :row-offset
+         {opening :opening
+          gable :gable
+          slope :slope} :angles
+         {curvature-row :row
           row-zero :row-zero
-          curve-col :col
-          curve-col-offset :col-offset
+          curvature-col :col
           col-zero :col-zero} :curvature} config
         {stagger-y :y stagger-z :z}  (get staggers col)
-        col-radius (- (/ (+ dist-y 1) (Math/sin curve-col)))
-        row-radius (- (/ (+ dist-x 1) (Math/sin curve-row)))]
+        col-radius (- (/ (+ dist-y 1) (Math/sin curvature-col)))
+        row-radius (- (/ (+ dist-x 1) (Math/sin curvature-row)))]
     #_(clojure.pprint/pprint config)
     #_(println "col-radius " col-radius ", stagger-y " stagger-y ", stagger-z " stagger-z)
     (->> shape
          (translate [0 0 (- col-radius)])
-         (rotate (+ (* curve-col (- row row-zero)) curve-col-offset) [1 0 0])
+         (rotate (* curvature-col (- row row-zero)) [1 0 0])
          (translate [0 0 col-radius])
 
          (translate [0 0 (- row-radius)])
-         (rotate (+ (* curve-row (- col col-zero)) curve-row-offset) [0 1 0])
+         (rotate (* curvature-row (- col col-zero)) [0 1 0])
          (translate [0 stagger-y (+ row-radius stagger-z)])
 
-         #_(translate [(* row dist-x) 
-                     (+ (* col dist-y) 
-                        (get staggers row 0))
-                     0])
+         (rotate slope [1 0 0])
+         (rotate gable [0 1 0])
+         (rotate opening [0 0 1])
          (translate offsets)
-         #_(rotate slope [1 0 0])
-         #_(rotate gable [0 1 0])
-         #_(rotate opening [0 0 1])
          )))
 
 (defn place-shape [config shape]

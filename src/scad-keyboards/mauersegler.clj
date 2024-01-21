@@ -32,7 +32,7 @@
                    :fingers {:row-number 3
                              :col-number 6
                              ; x, y, z
-                             :offset [110 0 5]
+                             :offset [120 0 15]
                              :staggers [{:y 6 :z -5} 
                                         {:y 9 :z -5}
                                         {:y 15 :z -8}
@@ -42,24 +42,26 @@
                              :angles {:opening (deg2rad 18) ; like a door
                                       :gable (deg2rad 10)  ; like a key 
                                       :slope (deg2rad 0)}  ; like a laptop monitor
-                             :curvature {:row (deg2rad -6) :col (deg2rad -24)
-                                         :row-offset (deg2rad 35) :col-offset (deg2rad 35)}
+                             :curvature {:row (deg2rad -6) :col (deg2rad -32)
+                                         :row-offset (deg2rad 5) :col-offset (deg2rad -15)
+                                         :row-zero 1 :col-zero 5}
                              :excluded-grid-positions #{}
                              :additional-grid-positions #{}}
 
                    :thumbs {:row-number 1
                             :col-number 3
-                            :offset [-50 -30 -5]
+                            :offset [-43 -35 5]
                             :staggers [{:y 0 :z 0}
                                        {:y 0 :z 0}
                                        {:y 0 :z 0}]
                             :angles {:opening (deg2rad 26)
                                      :gable (deg2rad -14)
                                      :slope (deg2rad 12)}
-                            :curvature {:row (deg2rad -28) :col (deg2rad -6)
-                                        :row-offset (deg2rad -38) :col-offset (deg2rad 0)}
-                            :excluded-grid-positions #{}
-                            :additional-grid-positions #{[1 -1]}}})
+                            :curvature {:row (deg2rad -32) :col (deg2rad -6)
+                                        :row-offset (deg2rad -60) :col-offset (deg2rad 0)
+                                        :row-zero 0 :col-zero 1}
+                            :excluded-grid-positions #{[1 0]}
+                            :additional-grid-positions #{[1 0.5] [1 -0.5]}}})
 
 (defn deep-merge [a & maps]
   (if (map? a)
@@ -79,20 +81,22 @@
           dist-y :y} :key-distance
          {curve-row :row
           curve-row-offset :row-offset
+          row-zero :row-zero
           curve-col :col
-          curve-col-offset :col-offset} :curvature} config
+          curve-col-offset :col-offset
+          col-zero :col-zero} :curvature} config
         {stagger-y :y stagger-z :z}  (get staggers col)
-        col-radius (- (/ dist-y (Math/sin curve-col)))
-        row-radius (- (/ dist-x (Math/sin curve-row)))]
+        col-radius (- (/ (+ dist-y 1) (Math/sin curve-col)))
+        row-radius (- (/ (+ dist-x 1) (Math/sin curve-row)))]
     #_(clojure.pprint/pprint config)
     #_(println "col-radius " col-radius ", stagger-y " stagger-y ", stagger-z " stagger-z)
     (->> shape
          (translate [0 0 (- col-radius)])
-         (rotate (+ (* curve-col row) curve-col-offset) [1 0 0])
+         (rotate (+ (* curve-col (- row row-zero)) curve-col-offset) [1 0 0])
          (translate [0 0 col-radius])
 
          (translate [0 0 (- row-radius)])
-         (rotate (+ (* curve-row col) curve-row-offset) [0 1 0])
+         (rotate (+ (* curve-row (- col col-zero)) curve-row-offset) [0 1 0])
          (translate [0 stagger-y (+ row-radius stagger-z)])
 
          #_(translate [(* row dist-x) 

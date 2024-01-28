@@ -41,7 +41,7 @@
                                         {:y 0 :z -2}]
                              :angles {:opening (deg2rad 0) ; like a door
                                       :gable (deg2rad 20)  ; like a key 
-                                      :slope (deg2rad -18)}  ; like a laptop monitor
+                                      :slope (deg2rad -5)}  ; like a laptop monitor
                              :curvature {:row (deg2rad -6) :col (deg2rad -32)
                                          :row-zero 1 :col-zero 3}
                              :excluded-grid-positions #{}
@@ -49,13 +49,13 @@
 
                    :thumbs {:row-number 1
                             :col-number 3
-                            :offset [0 -23 30]
+                            :offset [5 -33 32]
                             :staggers [{:y 0 :z 0}
                                        {:y 0 :z 0}
                                        {:y 0 :z 0}]
                             :angles {:opening (deg2rad 0)
-                                     :gable (deg2rad -60)
-                                     :slope (deg2rad 15)}
+                                     :gable (deg2rad -70)
+                                     :slope (deg2rad 20)}
                             :curvature {:row (deg2rad -32) :col (deg2rad -6)
                                         :row-zero 0 :col-zero 1}
                             :excluded-grid-positions #{[1 0]}

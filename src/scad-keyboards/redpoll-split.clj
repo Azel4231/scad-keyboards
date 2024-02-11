@@ -21,9 +21,9 @@
               :plate-thickness 1.5
               :layer-thickness 2
               :plate-border 4
-              :mirror-offset [30 0]
+              :mirror-offset [44 0]
               :keycap-dimensions {:x 18 :y 18 :z 11}
-              :plate-mirror-edge {:min -10 :max 85}
+              :plate-mirror-edge {:min 6 :max 85}
               :screwhole-radius 0.6
               :screwhole-positions [[4 2.8] [4 -0.8] [1.2 4.4]]
               :strut-positions [[4 2.9] [4 -0.9]]
@@ -38,7 +38,7 @@
 
               :thumb-row-number 1
               :thumb-col-number 4
-              :thumb-offset [12 -20]
+              :thumb-offset [25 -20]
               :thumb-staggers [0 0 0 6]})
 
 (def config redpoll)
@@ -135,7 +135,7 @@
                (+ cap-y (* 2 plate-border)) 
                layer-thickness)
          ;; Simulate additional key positions to make space for the microcontroller
-         (place-at-key-positions (update config :additional-grid-positions #(conj [0 3.8])))
+         (place-at-key-positions (update config :additional-grid-positions #(conj % [0 3.85])))
          (cons mirror-edge-helper)
          (apply hull)
          #_(mirror-halves) 
@@ -233,7 +233,7 @@
     (union
      (translate [0 0 (* 2 explode)] (->> (cube 18 33.5 1.5)
                                          (rotate o-angle [0 0 1])
-                                         (translate [9.5 70 0])
+                                         (translate [18.5 70 0])
                                          (color [0.3 0.3 0.3 1])))
      (translate [0 0 (* 2 explode)] keycaps)
      (translate [0 0 (* plate-thickness explode)] (top-layer config)) 

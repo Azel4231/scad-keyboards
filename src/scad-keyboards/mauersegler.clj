@@ -70,6 +70,11 @@
                           {:fingers {:excluded-grid-positions #{[5 0]}}
                            :thumbs {:col-number 4}}))
 
+
+;; place-shape umbauen, dass es auch mit einer Sequence von Shapes umgehen kann (erhoffe Performance Gewinn).
+;; Zwischenräume der Löcher ermittlen:
+(partition 2 1 (range 5))
+
 (defn place-shape-at [config
                       shape
                       [col row]]
@@ -136,7 +141,7 @@
                                            2)))
                     )))
 
-(defn case-shape [border height]
+(defn per-key-case-shape [border height]
   ;; produce high quality mesh
   (binding [scad-clj.model/*fa* 2
             scad-clj.model/*fn* 10  ;; low 10 (instantaneous), medium 30 (3mins), high 50 (??? mins)
@@ -151,29 +156,57 @@
 
 (defn kb-case-raw [config plate-border keycap-kerf]
   (let [{{cap-x :x
-          cap-y :y} :keycap-dimensions} config
-        height 30]
-    (->> (case-shape plate-border 10)
-         (minkowski (cube (+ plate-border cap-x) (+ plate-border cap-y) 1))
+          cap-y :y} :keycap-dimensions
+         plate-thickness :plate-thickness} config]
+    (->> (cube 1 1 plate-thickness)
+         (minkowski (cube (+ 0.5 cap-x) (+ 0.5 cap-y) plate-thickness))
          (place-at-key-positions config)
          (union)
+
+         #_(per-key-case-shape plate-border 10)
+         #_(minkowski (cube (+ plate-border cap-x) (+ plate-border cap-y) 1))
+         #_(place-at-key-positions config)
+         #_(union)
          #_(hull)
-         (difference-last (place-at-key-positions config
+         #_(difference-last (place-at-key-positions config
                                                   (translate [0 0 (/ height 2)]
                                                              (cube (+ cap-x (* 2 keycap-kerf))
                                                                    (+ cap-y (* 2 keycap-kerf))
                                                                    height))))
          )))
 
+(defn get-posts [idxs coll]
+  (let [idx-set (into #{} idxs)
+        idx-filter (fn [idx item] (when (idx-set idx) item))]
+    (keep-indexed idx-filter coll)))
+
+(map (partial get-posts [0 2]) [[1 2 3 4] [5 6 7 8]])
+
 (defn kb-case [config]
   (let [{plate-border :plate-border
-         case-thickness :case-thickness
+         plate-thickness :plate-thickness
+         col-number :col-number
+         row-number :row-number
          kerf :keycap-kerf
          {cut-x :x
           cut-y :y} :cutout-dimensions} config
-        height 20]
+        height 20
+        
+         posts (->> [[-0.6 -0.6] [-0.6 0.6] [0.6 0.6] [0.6 -0.6]]
+                    (map (fn[[dx dy]]
+                           (translate [(* dx cut-x) (* dy cut-y) 0]
+                                      (cube 0.1 0.1 plate-thickness))))
+                    (map #(place-at-key-positions % config)))
+        ;; relevant-h (->> col-number
+        ;;                 (range)
+        ;;                 (map-indexed ))
+        ;; between-h (->> ())
+        ;; between-v (->> ())
+        ;; between-x (->> ())
+        ] 
+
     (-> (kb-case-raw config plate-border kerf)
-        (difference (translate [0 0 (- case-thickness)] 
+        #_(difference (translate [0 0 (- case-thickness)] 
                                (kb-case-raw config 
                                             (- plate-border case-thickness)
                                             (+ kerf case-thickness))))
@@ -183,6 +216,7 @@
                                                               cut-y
                                                               height))))
         (difference (translate [0 0 -50] (cube 500 500 100)))
+        #_(union between-h between-v between-x)
         )))
 
 (defn mirror-halves [shape]

@@ -14,16 +14,25 @@
 (defn deg2rad [degrees]
   (* (/ degrees 180) PI))
 
-(def redpoll {:opening-angle (deg2rad 16)
+(def redpoll {:keycap-dimensions {:x 18 :y 18 :z 11}
               :cutout-dimensions {:x 13.96 :y 13.96}
               :key-distance {:x 19.0 :y 19.0}
               :keycap-kerf 0.75
+
+              :opening-angle (deg2rad 16)
               :plate-thickness 1.5
               :layer-thickness 2
-              :plate-border 4
-              :mirror-offset [44 0]
-              :keycap-dimensions {:x 18 :y 18 :z 11}
-              :plate-mirror-edge {:min 6 :max 85}
+              :plate-border 3
+              :plate-mirror-edge {:min 0 :max 74.2}
+              :controller-position {:x 16 :y 65 :z -5}
+              :controller-dimensions {:x 18 :y 23 :z 1.5} ;; Seeed XIAO BLE
+              ;;  {:x 18 :y 33.5 :z 1.5}  ;; Nice!Nano
+              :battery-position {:x 14 :y 8 :z 0}
+              :battery-dimensions {:x 11 :y 42 :z 6.5}
+              ;; {:x 20 :y 35 :z 6.5}  https://www.mylipo.de/Lipo-Akku-250mAh-37V-25C-50C-GENIUS-CP-WALKERA
+              ;; {:x 20 :y 35 :z 5}  https://www.mylipo.de/Lipo-Akku-180mAh-37V-25C-50C
+              ;; {:x 11 :y 42 :z 5.8}  https://www.mylipo.de/Lipo-Akku-150mAh-37V-25C-50CJST-PH125-2-Pin-Stecker
+              
               :screwhole-radius 0.6
               :screwhole-positions [[4 2.8] [4 -0.8] [1.2 4.4]]
               :strut-positions [[4 2.9] [4 -0.9]]
@@ -33,12 +42,13 @@
               :row-number 3
               :col-number 6
               :col-staggers [8 12 18 14 6 3]
+              :col-offset [34 -11]
               :excluded-grid-positions #{}
               :additional-grid-positions #{[1 3]}
 
               :thumb-row-number 1
               :thumb-col-number 4
-              :thumb-offset [25 -20]
+              :thumb-offset [12 -25]
               :thumb-staggers [0 0 0 6]})
 
 (def config redpoll)
@@ -53,8 +63,8 @@
                      (+ (* col dist-y) 
                         (get staggers row 0))
                      0])
-         (rotate angle [0 0 1])
          (translate [offset-x offset-y 0])
+         (rotate angle [0 0 1])
          )))
 
 (defn single-hole [kerf]
@@ -64,7 +74,7 @@
 
 (defn place-at-finger-position [shape position]
   (let [{col-staggers :col-staggers
-         offset :mirror-offset} config]
+         offset :col-offset} config]
     (place-shape shape offset col-staggers position)))
 
 (defn place-at-thumb-position [shape position]
@@ -134,8 +144,7 @@
     (->> (cube (+ cap-x (* 2 plate-border)) 
                (+ cap-y (* 2 plate-border)) 
                layer-thickness)
-         ;; Simulate additional key positions to make space for the microcontroller
-         (place-at-key-positions (update config :additional-grid-positions #(conj % [0 3.85])))
+         (place-at-key-positions config)
          (cons mirror-edge-helper)
          (apply hull)
          #_(mirror-halves) 
@@ -227,14 +236,32 @@
 
 (defn create-model [config]
   (let [{plate-thickness :plate-thickness
-         o-angle :opening-angle} config
+         o-angle :opening-angle
+        {mcu-x :x
+         mcu-y :y
+         mcu-z :z} :controller-position
+        {mcu-w :x 
+         mcu-d :y
+         mcu-h :z} :controller-dimensions
+        {bat-x :x
+         bat-y :y
+         bat-z :z} :battery-position
+        {bat-w :x
+         bat-d :y
+         bat-h :z} :battery-dimensions} config
         keycaps (place-at-key-positions config (keycap config))
+        mcu (cube mcu-w mcu-d mcu-h)
+        battery (cube bat-w bat-d bat-h)
         explode 1]
     (union
-     (translate [0 0 (* 2 explode)] (->> (cube 18 33.5 1.5)
+     (translate [0 0 (* 2 explode)] (->> mcu
                                          (rotate o-angle [0 0 1])
-                                         (translate [18.5 70 0])
-                                         (color [0.3 0.3 0.3 1])))
+                                         (translate [mcu-x mcu-y mcu-z])
+                                         (color [0.3 0.3 0.8 1])))
+     (translate [0 0 (* 2 explode)] (->> battery
+                                         (rotate o-angle [0 0 1])
+                                         (translate [bat-x bat-y bat-z])
+                                         (color [0.3 0.8 0.3 1])))
      (translate [0 0 (* 2 explode)] keycaps)
      (translate [0 0 (* plate-thickness explode)] (top-layer config)) 
      (plate-layer-upper config)

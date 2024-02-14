@@ -23,12 +23,12 @@
               :plate-thickness 1.5
               :layer-thickness 2
               :plate-border 3
-              :plate-mirror-edge {:min 0 :max 74.2}
+              :plate-mirror-edge {:min 22 :max 73}
               :controller-position {:x 16 :y 65 :z -5}
               :controller-dimensions {:x 18 :y 23 :z 1.5} ;; Seeed XIAO BLE
               ;;  {:x 18 :y 33.5 :z 1.5}  ;; Nice!Nano
-              :battery-position {:x 14 :y 8 :z 0}
-              :battery-dimensions {:x 11 :y 42 :z 6.5}
+              :battery-position {:x 18 :y 9 :z 0}
+              :battery-dimensions {:x 20 :y 35 :z 6.5}
               ;; {:x 20 :y 35 :z 6.5}  https://www.mylipo.de/Lipo-Akku-250mAh-37V-25C-50C-GENIUS-CP-WALKERA
               ;; {:x 20 :y 35 :z 5}  https://www.mylipo.de/Lipo-Akku-180mAh-37V-25C-50C
               ;; {:x 11 :y 42 :z 5.8}  https://www.mylipo.de/Lipo-Akku-150mAh-37V-25C-50CJST-PH125-2-Pin-Stecker
@@ -42,13 +42,13 @@
               :row-number 3
               :col-number 6
               :col-staggers [8 12 18 14 6 3]
-              :col-offset [34 -11]
+              :col-offset [40 -11]
               :excluded-grid-positions #{}
               :additional-grid-positions #{[1 3]}
 
               :thumb-row-number 1
               :thumb-col-number 4
-              :thumb-offset [12 -25]
+              :thumb-offset [18 -25]
               :thumb-staggers [0 0 0 6]})
 
 (def config redpoll)

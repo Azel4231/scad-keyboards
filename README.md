@@ -4,12 +4,22 @@
 
 ![Image](Redpoll.png)
 
-AzelusMK4 (working title)
+Redpoll Steno (Work in Progress)
+
+![Image](redpoll-steno.png)
+
+Redpoll Split (Work in Progress)
+
+![Image](redpoll-split.png)
+
+Mauersegler (Highly work in Progress)
+
+3D printed, tented, split keyboard with keywells.
 
 ![Image](AzelusMK4.png)
 
 
-Uses Clojure and openscad-clj.
+Uses Clojure and openscad-clj. Every .clj file is standalone.
 
 This repo is inspired by the [Dactyl](https://github.com/adereth/dactyl-keyboard) and the [Dactyl Manuform](https://github.com/abstracthat/dactyl-manuform) projects (though no code was used). 
 

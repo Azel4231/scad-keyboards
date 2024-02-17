@@ -41,12 +41,19 @@
               :thumb-staggers [0 0 0 4]})
 
 (def redpoll-steno {:opening-angle (deg2rad 15)
-                    :plate-mirror-edge {:min -37 :max 65}
+                    :plate-border 3
+                    :mirror-offset [20 0]
+                    :cutout-dimensions {:x 13.98 :y 13.98}
+                    :key-distance {:x 19.0 :y 19.0}
+                    :keycap-dimensions {:x 18 :y 18 :z 10}
+                    :plate-mirror-edge {:min -37 :max 72}
 
                     :row-number 2
-                    :additional-grid-positions #{[1 2] [2 -1]}
+                    :col-staggers [10 12 20 15 5 2]
+                    :additional-grid-positions #{[1 2]}
 
-                    :thumb-col-number 2})
+                    :thumb-col-number 2
+                    :thumb-offset [12 -22]})
 
 
 
@@ -97,12 +104,20 @@
                   [col-idx row-idx])
                 (map (partial place-at-thumb-position config shape))))))
 
-(defn choc-keycap [config]
-  (let [{{cap-x :x 
-          cap-y :y 
+
+(defn keycap [config]
+  (let [{{cap-x :x
+          cap-y :y
           cap-z :z} :keycap-dimensions} config]
     (color [0.3 0.3 0.3 1]
-           (cube cap-x cap-y cap-z))))
+           (translate [0 0 5]
+                      (hull (cube cap-x
+                                  cap-y
+                                  2)
+                            (translate [0 1.5 (- cap-z 2)]
+                                       (cube (* cap-x 0.7)
+                                             (* cap-y 0.7)
+                                             2)))))))
 
 (defn mirror-halves [shape]
   (union shape (mirror [1 0 0] shape)))
@@ -217,7 +232,7 @@
 
 (defn create-model [config]
   (let [{plate-thickness :plate-thickness} config
-        keycaps (mirror-halves (place-at-key-positions config (choc-keycap config)))
+        keycaps (mirror-halves (place-at-key-positions config (keycap config)))
         explode 1]
     (union
      (translate [0 0 (* 5 explode)] keycaps)

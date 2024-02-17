@@ -6,8 +6,8 @@
 
 (ns redpoll
   (:refer-clojure :exclude [use import])
-  (:require [scad-clj.scad :refer :all]
-            [scad-clj.model :refer :all]))
+  (:require [scad-clj.scad :refer [write-scad]]
+            [scad-clj.model :refer [translate rotate intersection union hull difference cube color mirror cylinder project]]))
 
 (def PI Math/PI)
 
@@ -40,14 +40,17 @@
               :thumb-offset [12 -20]
               :thumb-staggers [0 0 0 4]})
 
-(def goldcrest {:opening-angle (deg2rad 16) 
-                :excluded-grid-positions #{[5 0]}
-                :additional-grid-positions #{[1 3] [3 -1]}})
+(def redpoll-steno {:opening-angle (deg2rad 15)
+                    :plate-mirror-edge {:min -37 :max 65}
 
-(def config redpoll)
+                    :row-number 2
+                    :additional-grid-positions #{[1 2] [2 -1]}
+
+                    :thumb-col-number 2})
 
 
-(defn place-shape [shape [offset-x offset-y] staggers [row col]]
+
+(defn place-shape [config shape [offset-x offset-y] staggers [row col]]
   (let [{{dist-x :x
           dist-y :y} :key-distance
          angle :opening-angle} config]
@@ -60,22 +63,22 @@
          (translate [offset-x offset-y 0])
          )))
 
-(defn single-hole [kerf]
+(defn single-hole [config kerf]
   (let [{{cutout-width :x
           cutout-height :y} :cutout-dimensions} config]
     (cube (+ cutout-width kerf) cutout-height 25)))
 
-(defn place-at-finger-position [shape position]
+(defn place-at-finger-position [config shape position]
   (let [{col-staggers :col-staggers
          offset :mirror-offset} config]
-    (place-shape shape offset col-staggers position)))
+    (place-shape config shape offset col-staggers position)))
 
-(defn place-at-thumb-position [shape position]
+(defn place-at-thumb-position [config shape position]
   (let [{thumb-staggers :thumb-staggers
          thumb-offset :thumb-offset} config]
-    (place-shape shape thumb-offset thumb-staggers position)))
+    (place-shape config shape thumb-offset thumb-staggers position)))
 
-(defn place-at-key-positions [shape]
+(defn place-at-key-positions [config shape]
   (let [{row-number :row-number
          col-number :col-number
          thumb-row-number :thumb-row-number
@@ -88,13 +91,13 @@
                   [col-idx row-idx])
                 (remove excluded)
                 (concat additional)
-                (map (partial place-at-finger-position shape)))
+                (map (partial place-at-finger-position config shape)))
            (->> (for [col-idx (range thumb-col-number)
                       row-idx (range thumb-row-number)]
                   [col-idx row-idx])
-                (map (partial place-at-thumb-position shape))))))
+                (map (partial place-at-thumb-position config shape))))))
 
-(defn choc-keycap []
+(defn choc-keycap [config]
   (let [{{cap-x :x 
           cap-y :y 
           cap-z :z} :keycap-dimensions} config]
@@ -107,7 +110,7 @@
 (defn average [& vals]
   (/ (reduce + vals) (count vals)))
 
-(defn base-plate []
+(defn base-plate [config]
   (let [{plate-thickness :plate-thickness
          plate-border :plate-border
          {cap-x :x 
@@ -121,78 +124,81 @@
     (->> (cube (+ cap-x (* 2 plate-border)) 
                (+ cap-y (* 2 plate-border)) 
                plate-thickness)
-         (place-at-key-positions)
+         (place-at-key-positions config)
          (cons mirror-edge-helper)
          (apply hull)
          (mirror-halves) 
          (color [0.98 0.92 0.6 1]))))
   
-(defn screw-holes []
+(defn screw-holes [config]
   (let [{hole-poss :screwhole-positions
          thumb-hole-poss :thumb-screwhole-positions
          screwhole-radius :screwhole-radius} config
         hole (color [0 0 0 1] (cylinder screwhole-radius 15))]
     (mirror-halves (concat (->> hole-poss
-                                (map (partial place-at-finger-position hole)))
+                                (map (partial place-at-finger-position config hole)))
                            (->> thumb-hole-poss
-                                (map (partial place-at-thumb-position hole)))))))
+                                (map (partial place-at-thumb-position config hole)))))))
 
-(defn top-layer []
+(defn top-layer [config]
   (let [{{cap-x :x
           cap-y :y} :keycap-dimensions
          kerf :keycap-kerf} config
-        base-plate (base-plate)
-        cap-cutouts (place-at-key-positions (cube (+ cap-x (* 2 kerf)) 
-                                                  (+ cap-y (* 2 kerf)) 
+        base-plate (base-plate config)
+        cap-cutouts (place-at-key-positions config
+                                            (cube (+ cap-x (* 2 kerf))
+                                                  (+ cap-y (* 2 kerf))
                                                   25))]
     (difference base-plate 
                 (mirror-halves cap-cutouts))))
 
-(defn plate-layer [cutout-switch cutout-controller]
-  (let [base-plate (base-plate)
-        cutouts (mirror-halves (place-at-key-positions cutout-switch))
+(defn plate-layer [config cutout-switch cutout-controller]
+  (let [base-plate (base-plate config)
+        cutouts (mirror-halves (place-at-key-positions config cutout-switch))
         cutout-battery (hull (translate [0 14 0] (cube 10 47 5))
                              (translate [0 2 0] (cube 28 16 5)))]
     (union (difference base-plate
                        cutouts
                        cutout-battery
                        cutout-controller
-                       (screw-holes)))))
+                       (screw-holes config)))))
 
-(defn plate-layer-upper []
-  (plate-layer (single-hole 0) 
+(defn plate-layer-upper [config ]
+  (plate-layer config 
+               (single-hole config 0) 
                (union (translate [0 65 0] (cube 18 33.5 5))
                       (translate [0 66 0] (cube 9 33 5)))))
 
-(defn plate-layer-lower []
+(defn plate-layer-lower [config]
   (let [cutout-controller (hull (translate [0 65 0] (cube 28 27 5))
                                 (translate [0 65 0] (cube 18 33.5 5)))
         cutout-usb-c (translate [0 66 0] (cube 9 33 5))
         cutout-power-switch (translate [20.4 80.3 0] (cube 7.2 10 5))
         cutout-reset-button (translate [-19.7 80.3 0] (cube 6.2 11 5))]
-    (plate-layer (single-hole 1.2) 
+    (plate-layer config
+                 (single-hole config 1.2)
                  (union cutout-controller
                         cutout-usb-c
                         cutout-power-switch
                         cutout-reset-button))))
 
-(defn test-layer []
-  (intersection (plate-layer-upper)
+(defn test-layer [config ]
+  (intersection (plate-layer-upper config)
                 (translate [18 50 0] (cube 60 80 5))))
 
     
-(defn frame-layer []
+(defn frame-layer [config]
   (let [{plate-thickness :plate-thickness
          strut-poss :strut-positions
          thumb-strut-poss :thumb-strut-positions} config
-        base-plate (base-plate)
-        cutout-right (apply hull (place-at-key-positions (single-hole 0)))
+        base-plate (base-plate config)
+        cutout-right (apply hull (place-at-key-positions config (single-hole config 0)))
         cutout (hull (mirror-halves cutout-right))
         cutout-controller (translate [0 65 0] (cube 28 30 5))
         cutout-switch (translate [18 75 0] (cube 12 8 5))
         cutout-reset (translate [-18 75 0] (cube 10 8 5))
-        struts-right (concat (map (partial place-at-finger-position (cylinder 7 plate-thickness)) strut-poss)
-                             (map (partial place-at-thumb-position (cylinder 7 plate-thickness)) thumb-strut-poss))]
+        struts-right (concat (map (partial place-at-finger-position config (cylinder 7 plate-thickness)) strut-poss)
+                             (map (partial place-at-thumb-position config (cylinder 7 plate-thickness)) thumb-strut-poss))]
     (difference (union 
                  (mirror-halves (map (partial intersection base-plate) struts-right))
                  (difference base-plate
@@ -201,25 +207,25 @@
                              cutout-switch
                              cutout-reset
                              ))
-                 (screw-holes))))
+                 (screw-holes config))))
 
-(defn bottom-layer []
-  (difference (base-plate)
-              (screw-holes)))
+(defn bottom-layer [config]
+  (difference (base-plate config)
+              (screw-holes config)))
 
 
 
 (defn create-model [config]
   (let [{plate-thickness :plate-thickness} config
-        keycaps (mirror-halves (place-at-key-positions (choc-keycap)))
+        keycaps (mirror-halves (place-at-key-positions config (choc-keycap config)))
         explode 1]
     (union
      (translate [0 0 (* 5 explode)] keycaps)
-     (translate [0 0 (* plate-thickness explode)] (top-layer)) 
-     (plate-layer-upper)
-     (translate [0 0 (- (* 1 plate-thickness explode))] (plate-layer-lower))
-     (translate [0 0 (- (* 2 plate-thickness explode))] (frame-layer))
-     (translate [0 0 (- (* 3 plate-thickness explode))] (bottom-layer))
+     (translate [0 0 (* plate-thickness explode)] (top-layer config)) 
+     (plate-layer-upper config)
+     (translate [0 0 (- (* 1 plate-thickness explode))] (plate-layer-lower config))
+     (translate [0 0 (- (* 2 plate-thickness explode))] (frame-layer config))
+     (translate [0 0 (- (* 3 plate-thickness explode))] (bottom-layer config))
      #_(->> (cube 200 200 5)
             (rotate (/ PI 4) [0 0 1])
             (translate [0 45 (- (* 4 plate-thickness explode))])
@@ -227,30 +233,29 @@
   )
 
 (defn create-multi-model []
-  (let [goldcrest (create-model (merge redpoll goldcrest))
-        redpoll (create-model config)]
+  (let [redpoll-steno (create-model (merge redpoll redpoll-steno))
+        redpoll (create-model redpoll)]
     (union redpoll
-           #_(translate [0 150 0] goldcrest)
+           (translate [0 150 0] redpoll-steno)
            )))
 
-(defn all-layers []
+(defn all-layers [config]
   (union
-   (translate [0 0 0] (top-layer ))
-   (translate [0 -150 0] (plate-layer-lower ))
-   (translate [0 -300 0] (bottom-layer))
-   (translate [-220 -210 0] (rotate (* PI 3/2) [0 0 1] (plate-layer-upper)))
-   (translate [-250 -40 0] (rotate (* PI 1/2) [0 0 1] (frame-layer)))
+   (translate [0 0 0] (top-layer config))
+   (translate [0 -150 0] (plate-layer-lower config))
+   (translate [0 -300 0] (bottom-layer config))
+   (translate [-220 -210 0] (rotate (* PI 3/2) [0 0 1] (plate-layer-upper config)))
+   (translate [-250 -40 0] (rotate (* PI 1/2) [0 0 1] (frame-layer config)))
    #_(color [0.5 0.5 0.5] (translate [-100 150 -20] (cube 495 1000 1.5)))))
 
-(defn run [] 
-  (spit "things/redpoll.scad"
-        (write-scad (create-multi-model)))
-  (spit "things/top.scad" (write-scad (project (top-layer))))
-  (spit "things/plate-upper.scad" (write-scad (project (plate-layer-upper))))
-  (spit "things/plate-lower.scad" (write-scad (project (plate-layer-lower))))
-  (spit "things/frame.scad" (write-scad (project (frame-layer))))
-  (spit "things/bottom.scad" (write-scad (project (bottom-layer))))
-  (spit "things/all.scad" (write-scad (project (all-layers))))
-  )
+(defn run []
+    (spit "things/redpoll.scad"
+                   (write-scad (create-multi-model)))
+    (spit "things/top.scad" (write-scad (project (top-layer redpoll))))
+    (spit "things/plate-upper.scad" (write-scad (project (plate-layer-upper redpoll))))
+    (spit "things/plate-lower.scad" (write-scad (project (plate-layer-lower redpoll))))
+    (spit "things/frame.scad" (write-scad (project (frame-layer redpoll))))
+    (spit "things/bottom.scad" (write-scad (project (bottom-layer redpoll))))
+    (spit "things/all.scad" (write-scad (project (all-layers redpoll)))))
 
 (run)

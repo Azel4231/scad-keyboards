@@ -17,13 +17,16 @@
 (def redpoll {:keycap-dimensions {:x 18 :y 18 :z 11}
               :cutout-dimensions {:x 13.96 :y 13.96}
               :key-distance {:x 19.0 :y 19.0}
-              :keycap-kerf 0.75
+              :keycap-kerf 0.75 
+              :mirror false
 
-              :opening-angle (deg2rad 16)
+              :opening-angle (deg2rad 15)
               :plate-thickness 1.5
               :layer-thickness 2
               :plate-border 3
-              :plate-mirror-edge {:min 22 :max 73}
+              :plate-mirror-edge {:min 22 :max 89}  ;; Obere Kante gerade weiter führen
+              ;; :plate-mirror-edge {:min 22 :max 84.5}  ;; eine Linie mit anderer Hälfte
+              ;; :plate-mirror-edge {:min 22 :max 73}  ;; parallel zur Unterkante
               :controller-position {:x 16 :y 65 :z -5}
               :controller-dimensions {:x 18 :y 23 :z 1.5} ;; Seeed XIAO BLE
               ;;  {:x 18 :y 33.5 :z 1.5}  ;; Nice!Nano
@@ -42,13 +45,13 @@
               :row-number 3
               :col-number 6
               :col-staggers [8 12 18 14 6 3]
-              :col-offset [40 -11]
+              :col-offset [36 -11]
               :excluded-grid-positions #{}
-              :additional-grid-positions #{[1 3]}
+              :additional-grid-positions #{[1 3]} ;; [1 3]
 
               :thumb-row-number 1
               :thumb-col-number 4
-              :thumb-offset [21 -25]
+              :thumb-offset [17 -25]
               :thumb-staggers [0 0 0 6]})
 
 (def config redpoll)
@@ -116,8 +119,12 @@
                                              (* cap-y 0.7)
                                              2)))))))
 
-(defn mirror-halves [shape]
-  (union shape (mirror [1 0 0] shape)))
+(defn mirror-halves 
+  ([shape]
+   (union shape (mirror [1 0 0] shape)))
+  ([mirror? shape]
+   (if mirror? (mirror-halves shape) shape)))
+
 
 (defn average [& vals]
   (/ (reduce + vals) (count vals)))
@@ -193,10 +200,6 @@
                         cutout-power-switch
                         cutout-reset-button))))
 
-(defn test-layer [config]
-  (intersection (plate-layer-upper config)
-                (translate [18 50 0] (cube 60 80 5))))
-
     
 (defn frame-layer [config]
   (let [{plate-thickness :plate-thickness
@@ -229,23 +232,25 @@
 (defn create-model [config]
   (let [{plate-thickness :plate-thickness
          o-angle :opening-angle
-        {mcu-x :x
-         mcu-y :y
-         mcu-z :z} :controller-position
-        {mcu-w :x 
-         mcu-d :y
-         mcu-h :z} :controller-dimensions
-        {bat-x :x
-         bat-y :y
-         bat-z :z} :battery-position
-        {bat-w :x
-         bat-d :y
-         bat-h :z} :battery-dimensions} config
+         {mcu-x :x
+          mcu-y :y
+          mcu-z :z} :controller-position
+         {mcu-w :x 
+          mcu-d :y
+          mcu-h :z} :controller-dimensions
+         {bat-x :x
+          bat-y :y
+          bat-z :z} :battery-position
+         {bat-w :x
+          bat-d :y
+          bat-h :z} :battery-dimensions
+         do-mirror :mirror} config
         keycaps (place-at-key-positions config (keycap config))
         mcu (cube mcu-w mcu-d mcu-h)
         battery (cube bat-w bat-d bat-h)
         explode 1]
     (mirror-halves
+     do-mirror
      (translate [1 0 0]
                 (union
                  (translate [0 0 (* 2 explode)] (->> mcu

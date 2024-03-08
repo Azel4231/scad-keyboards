@@ -20,54 +20,42 @@
               :keycap-kerf 0.75
               :mirror false
 
-              :opening-angle (deg2rad 15)
+              :opening-angle (deg2rad 14)
               :plate-thickness 1.5
               :layer-thickness 2
               :plate-border 2
               ;; :plate-mirror-edge {:min 22 :max 101}  ;; Obere Kante gerade weiter führen
               :plate-mirror-edge {:min 22 :max 95.5}  ;; eine Linie mit anderer Hälfte
               ;; :plate-mirror-edge {:min 22 :max 84}  ;; parallel zur Unterkante
-              :controller-position {:x 16 :y 65 :z 0}
-              :controller-dimensions {:x 18 :y 23 :z 1.5} ;; Seeed XIAO BLE
-              ;; :controller-dimensions {:x 18 :y 33.5 :z 1.5}  ;; Nice!Nano
-              :battery-position {:x 18 :y 9 :z 3}
-              :battery-dimensions {:x 20 :y 35 :z 6.5}
-              ;; {:x 20 :y 35 :z 6.5}  https://www.mylipo.de/Lipo-Akku-250mAh-37V-25C-50C-GENIUS-CP-WALKERA
-              ;; {:x 20 :y 35 :z 5}  https://www.mylipo.de/Lipo-Akku-180mAh-37V-25C-50C
-              ;; {:x 11 :y 42 :z 5.8}  https://www.mylipo.de/Lipo-Akku-150mAh-37V-25C-50CJST-PH125-2-Pin-Stecker
+              :controller {:x 16 :y 75 :z -1
+                           :w 18 :d 23 :h 1.5} ;; Seeed XIAO BLE
+              ;; :controller {:w 18 :d 33.5 :h 1.5}  ;; Nice!Nano
+              :battery {:x 18 :y 9 :z 3
+                        :w 20 :d 35 :h 6.5}
+              ;; {:w 20 :d 35 :h 6.5}  https://www.mylipo.de/Lipo-Akku-250mAh-37V-25C-50C-GENIUS-CP-WALKERA
+              ;; {:w 20 :d 35 :h 5}  https://www.mylipo.de/Lipo-Akku-180mAh-37V-25C-50C
+              ;; {:w 11 :d 42 :h 5.8}  https://www.mylipo.de/Lipo-Akku-150mAh-37V-25C-50CJST-PH125-2-Pin-Stecker
               
               :screwhole-radius 0.6
               :screwhole-positions [[4 2.8] [4 -0.8] [1.2 4.4]]
               :screwhole-matrix []
               :strut-positions [[4 2.9] [4 -0.9]]
               
-              :key-offset [36 0]
-              :matrix {:far-index {:positions [[0 0] [0 1] [0 2]]
-                                   :stagger [0 8]}
-                       :index {:positions [[1 0] [1 1] [1 2] [1 3]]
-                               :stagger [0 10]}
-                       :middle {:positions [[2 0] [2 1] [2 2]]
-                                :stagger [0 16]}
-                       :ring {:positions [[3 0] [3 1] [3 2]]
-                              :stagger [0 12]}
-                       :pinkey {:positions [[4 0] [4 1] [4 2]]
-                                :stagger [0 4]}
-                       :far-pinkey {:positions [[5 0] [5 1] [5 2]]
-                                    :stagger [0 3]}
-
-                       :thumb {:positions [[-1 -1] [0 -1] [1 -1]]
-                               :stagger [0 4]}
-                       ;; :far-thump {:positions [[2 -1]] :stagger [0 11]}
+              
+              :matrix {:offset [32 12]
+                       :clusters [{:rows 3
+                                   :cols 6
+                                   :staggers [[0 5] [0 7] [0 15] [0 11] [0 1] [0 0]]
+                                   :offset [0 1]
+                                   :additional-positions [[1 3]]}  ;; fingers
+                                  {:rows 1 
+                                   :cols 4
+                                   :offset [-19 -19] ;; -1u in both x and y direction
+                                   :staggers [[0 0] [0 0] [0 0] [0 4]]}  ;; thumbs
+                                  ]
                        }
-              
-              
-              ;; a hull part defines the key positions (cols, rows) based on which to create a hull
-              ;; all hull parts are then unioned together
-              ;; this allows using hull but still have convex shapes without using cutouts
-              :hull-parts [[:far-index]
-                           [:thumb]
-                           [:index :middle :ring :pinkey :far-pinkey :far-thump]]}
-                       )
+              }
+              )
 
 (def config redpoll)
 
@@ -83,31 +71,44 @@
   (let [{{dist-x :x
           dist-y :y} :key-distance
          angle :opening-angle
-         [offset-x offset-y] :key-offset} config
-        [row col] pos
+         {[offset-x offset-y] :offset} :matrix} config
+        [col row] pos
         [stagger-x stagger-y] stagger]
     (->> shape
          ;; row, col unit: 1u (one key)
          ;; stagger unit: mm
-         (translate [(+ (* row dist-x)
+         (translate [(+ (* col dist-x)
                         offset-x
                         stagger-x) 
-                     (+ (* col dist-y) 
+                     (+ (* row dist-y) 
                         offset-y
                         stagger-y)
                      0])
          (rotate angle [0 0 1])
          )))
 
-(defn place-shape-at [config shape matrix-def]
-  (let [[_ {poss :positions
-            stagger :stagger}] matrix-def]
-    (map (partial place-shape config shape stagger)
-         poss)))
+(defn place-shape-at [config shape cluster-def]
+  (let [{rows :rows
+         cols :cols
+         additional :additional-positions
+         staggers :staggers
+         offset :offset} cluster-def
+        positions (for [c (range cols)
+                        r (range rows)]
+                    [c r])
+        positions (concat positions additional)]
+    (->> positions
+         (map (fn [[col _ :as pos]] 
+                (place-shape config 
+                             shape 
+                             (map + 
+                                  (get staggers col [0 0])
+                                  offset)
+                             pos))))))
 
 (defn place-at-key-positions [config shape]
-  (let [{matrix :matrix} config]
-    (->> matrix
+  (let [{{clusters :clusters} :matrix} config]
+    (->> clusters
          (mapcat (partial place-shape-at config shape))
          )))
 
@@ -116,31 +117,59 @@
           cutout-height :y} :cutout-dimensions} config]
     (cube cutout-width cutout-height 25)))
 
-(defn plate-layer [config]
-  (let [{matrix :matrix
-         hull-parts :hull-parts
-         {dist-x :x
-          dist-y :y} :cutout-dimensions
-         plate-border :plate-border
-         plate-thickness :plate-thickness} config
-        dummy (cube (+ dist-x (* 0 plate-border))
-                    (+ dist-y (* 0 plate-border)) 
-                    0.01)]
-    (difference
-     (minkowski
-      (->> hull-parts
-           (map (fn [part-list]
-                  (->> part-list
-                       (select-keys matrix)
-                       (map (partial place-shape-at config dummy))
-                       (apply concat)
-                       (apply hull))))
-           (apply union))
-      (cylinder (* 1 plate-border) plate-thickness))
-     (place-at-key-positions config (single-cutout config)))))
+(defn controller [config additional-height]
+  (let [{o-angle :opening-angle
+         {x :x
+          y :y
+          z :z
+          w :w
+          d :d
+          h :h} :controller} config]
+    (->> (cube w d (+ h additional-height))
+         #_(rotate o-angle [0 0 1])
+         (translate [x y z])
+         (color [0.3 0.3 0.8 1]))))
+
+(defn battery [config additional-height]
+  (let [{o-angle :opening-angle
+         {x :x
+          y :y
+          z :z
+          w :w
+          d :d
+          h :h} :battery} config]
+    (->> (cube w d (+ h additional-height))
+         (rotate o-angle [0 0 1])
+         (translate [x y z])
+         (color [0.3 0.8 0.3 1]))))
 
 (defn average [& vals]
   (/ (reduce + vals) (count vals)))
+
+(defn plate-layer [config]
+  (let [{{dist-x :x
+          dist-y :y} :cutout-dimensions
+         plate-border :plate-border
+         plate-thickness :plate-thickness
+         {mirror-y-min :min
+          mirror-y-max :max} :plate-mirror-edge} config
+        mirror-edge-helper (translate [0 (average mirror-y-max mirror-y-min) 0]
+                                      (cube 0.01
+                                            (- mirror-y-max mirror-y-min)
+                                            0.01))
+        dummy (cube dist-x dist-y 0.01)]
+    (binding [scad-clj.model/*fa* 2
+              scad-clj.model/*fn* 50  ;; low 10, medium 30, high 50
+              scad-clj.model/*fs* 0.1]
+      (difference
+       (minkowski
+        (apply hull
+               (conj (place-at-key-positions config dummy)
+                     mirror-edge-helper))
+        ;; cutout controller etc.
+        (cylinder plate-border plate-thickness))
+       (place-at-key-positions config (single-cutout config))
+       (controller config 10)))))
 
 (defn base-plate [config]
   (let [{layer-thickness :plate-thickness
@@ -223,35 +252,23 @@
   (let [{plate-thickness :plate-thickness
          layer-thickness :layer-thickness
          o-angle :opening-angle
-         {mcu-x :x
-          mcu-y :y
-          mcu-z :z} :controller-position
-         {mcu-w :x 
-          mcu-d :y
-          mcu-h :z} :controller-dimensions
          {bat-x :x
           bat-y :y
-          bat-z :z} :battery-position
-         {bat-w :x
-          bat-d :y
-          bat-h :z} :battery-dimensions
+          bat-z :z
+          bat-w :w
+          bat-d :d
+          bat-h :h} :battery
          do-mirror :mirror} config
         keycaps (place-at-key-positions config (keycap config))
-        mcu (cube mcu-w mcu-d mcu-h)
-        battery (cube bat-w bat-d bat-h)
+        mcu (controller config 0)
+        battery (battery config 0)
         explode 1]
     (mirror-halves
      do-mirror
      (translate [1 0 0]
                 (union
-                 (translate [0 0 (* 2 explode)] (->> mcu
-                                                     (rotate o-angle [0 0 1])
-                                                     (translate [mcu-x mcu-y mcu-z])
-                                                     (color [0.3 0.3 0.8 1])))
-                 (translate [0 0 (* 2 explode)] (->> battery
-                                                     (rotate o-angle [0 0 1])
-                                                     (translate [bat-x bat-y bat-z])
-                                                     (color [0.3 0.8 0.3 1])))
+                 (translate [0 0 (* 2 explode)] mcu)
+                 (translate [0 0 (* 2 explode)] battery)
                  (translate [0 0 explode] keycaps)
                  (translate [0 0 (* plate-thickness explode)] (plate-layer config)) 
                  #_(translate [0 0 (* layer-thickness explode)] (top-layer config)) 

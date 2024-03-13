@@ -14,23 +14,27 @@
 (defn deg2rad [degrees]
   (* (/ degrees 180) PI))
 
+(defn deep-merge [a & maps]
+  (if (map? a)
+    (apply merge-with deep-merge a maps)
+    (apply merge-with deep-merge maps)))
+
 (def redpoll {:keycap-dimensions {:x 18 :y 18 :z 11}
               :cutout-dimensions {:x 13.96 :y 13.96}
               :key-distance {:x 19.0 :y 19.0}
               :keycap-kerf 0.75
-              :mirror false
+              :mirror true
 
               :opening-angle (deg2rad 14)
               :plate-thickness 1.5
               :layer-thickness 2
               :plate-border 2
-              ;; :plate-mirror-edge {:min 22 :max 101}  ;; Obere Kante gerade weiter führen
-              :plate-mirror-edge {:min 22 :max 95.5}  ;; eine Linie mit anderer Hälfte
-              ;; :plate-mirror-edge {:min 22 :max 84}  ;; parallel zur Unterkante
-              :controller {:x 16 :y 75 :z -1
+              ;; :plate-mirror-edge {:min 22 :max 101 :x 3}  ;; Obere Kante gerade weiter führen
+              :plate-mirror-edge {:min 38 :max 96.5 :x 3}  ;; where the halves touch
+              ;; :plate-mirror-edge {:min 22 :max 84 :x 3}  ;; parallel zur Unterkante
+              :controller {:x 12 :y 85 :z -1 
                            :w 18 :d 23 :h 1.5} ;; Seeed XIAO BLE
-              ;; :controller {:w 18 :d 33.5 :h 1.5}  ;; Nice!Nano
-              :battery {:x 18 :y 9 :z 3
+              :battery {:x 16 :y 22 :z 3
                         :w 20 :d 35 :h 6.5}
               ;; {:w 20 :d 35 :h 6.5}  https://www.mylipo.de/Lipo-Akku-250mAh-37V-25C-50C-GENIUS-CP-WALKERA
               ;; {:w 20 :d 35 :h 5}  https://www.mylipo.de/Lipo-Akku-180mAh-37V-25C-50C
@@ -42,7 +46,7 @@
               :strut-positions [[4 2.9] [4 -0.9]]
               
               
-              :matrix {:offset [32 12]
+              :matrix {:offset [38 12]
                        :clusters [{:rows 3
                                    :cols 6
                                    :staggers [[0 5] [0 7] [0 15] [0 11] [0 1] [0 0]]
@@ -57,7 +61,15 @@
               }
               )
 
+(def redpoll-nano {:plate-mirror-edge {:min 60 :max 96.5 :x 3}
+                   :controller {:x 10.2 :y 81.5 :z -1 :w 18 :d 33.5 :h 1.5}  ;; Nice!Nano
+                   :battery {:x 21 :y 22 :z 1
+                             :w 20 :d 35 :h 6.5}
+                   :matrix {:offset [43 11]}})
+
+
 (def config redpoll)
+
 
 (defn tprint
   ([param]
@@ -152,8 +164,9 @@
          plate-border :plate-border
          plate-thickness :plate-thickness
          {mirror-y-min :min
-          mirror-y-max :max} :plate-mirror-edge} config
-        mirror-edge-helper (translate [0 (average mirror-y-max mirror-y-min) 0]
+          mirror-y-max :max
+          mirror-x :x} :plate-mirror-edge} config
+        mirror-edge-helper (translate [mirror-x (average mirror-y-max mirror-y-min) 0]
                                       (cube 0.01
                                             (- mirror-y-max mirror-y-min)
                                             0.01))
@@ -283,8 +296,11 @@
   )
 
 (defn create-multi-model []
-  (let [redpoll (create-model config)]
-    (union redpoll
+  (let [redpoll-model (create-model redpoll)
+        nano-model (create-model (deep-merge redpoll redpoll-nano))
+        ]
+    (union redpoll-model
+           (translate [0 120 0] nano-model)
            )))
 #_(defn all-layers []
     (union

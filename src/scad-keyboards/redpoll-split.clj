@@ -28,6 +28,7 @@
               :opening-angle (deg2rad 14)
               :plate-thickness 1.5
               :layer-thickness 2
+              :case-wall-thickness 10
               :plate-border 2
               ;; :plate-mirror-edge {:min 22 :max 101 :x 3}  ;; Obere Kante gerade weiter führen
               :plate-mirror-edge {:min 38 :max 96.1 :x 3}  ;; where the halves touch
@@ -62,11 +63,9 @@
               }
               )
 
-(def redpoll-nano {:plate-mirror-edge {:min 60 :max 96.5 :x 3}
-                   :controller {:x 10.2 :y 81.5 :z -1 :w 18 :d 33.5 :h 1.5}  ;; Nice!Nano
-                   :battery {:x 21 :y 22 :z 1
-                             :w 20 :d 35 :h 6.5}
-                   :matrix {:offset [43 11]}})
+(def redpoll-nano {
+                   :controller {:x 10.2 :y 88 :z -1 :w 18 :d 33.5 :h 1.5}  ;; Nice!Nano
+                   })
 
 
 (def config redpoll)
@@ -156,16 +155,13 @@
          (translate [x y z])
          (color [0.3 0.8 0.3 1]))))
 
+
 (defn average [& vals]
   (/ (reduce + vals) (count vals)))
 
-(defn plate-layer [config]
+(defn base-plate-shape [config]
   (let [{{dim-x :x
           dim-y :y} :cutout-dimensions
-         {dist-x :x
-          dist-y :y} :key-distance
-         plate-border :plate-border
-         plate-thickness :plate-thickness
          {mirror-y-min :min
           mirror-y-max :max
           mirror-x :x} :plate-mirror-edge} config
@@ -173,10 +169,20 @@
                                       (cube 0.01
                                             (- mirror-y-max mirror-y-min)
                                             0.01))
-        dummy (cube dim-x dim-y 0.01)
-        base-plate (->> mirror-edge-helper
-                        (conj (place-at-key-positions config dummy))
-                        (apply hull))
+        dummy (cube dim-x dim-y 0.01)]
+    (->> mirror-edge-helper
+         (conj (place-at-key-positions config dummy))
+         (apply hull)
+         (color [0.98 0.92 0.6 1]))))
+
+(defn plate-layer [config]
+  (let [{{dim-x :x
+          dim-y :y} :cutout-dimensions
+         {dist-x :x
+          dist-y :y} :key-distance
+         plate-border :plate-border
+         plate-thickness :plate-thickness} config
+        base-plate (base-plate-shape config)
         case-cut-x (-> (- dist-x dim-x)
                        (+ dist-x))
         case-cut-y (-> (- dist-y dim-y)
@@ -185,14 +191,27 @@
     (binding [scad-clj.model/*fa* 2
               scad-clj.model/*fn* 10  ;; low 10, medium 30, high 50
               scad-clj.model/*fs* 0.1]
-      (-> base-plate
-          (difference (map (partial place-shape config case-cutout [0 3]) [[-1 0] [-1 1] [-1 2] [-1 3] [-1 4]]))
-          (difference (map (partial place-shape config case-cutout [0 5]) [[0 3] [0 4]]))
-          (minkowski (cylinder plate-border plate-thickness))
-          (difference (place-at-key-positions config (single-cutout config)))
-          (difference (controller config 10))))))
+      (color [0.8 0.8 0.8 1] (-> base-plate
+                                   (difference (map (partial place-shape config case-cutout [0 5]) [[-1 0] [-1 1] [-1 2] [-1 3] [-1 4]]))
+                                   (difference (map (partial place-shape config case-cutout [0 5]) [[0 3] [0 4]]))
+                                   (minkowski (cylinder plate-border plate-thickness))
+                                   (difference (place-at-key-positions config (single-cutout config)))
+                                   (difference (controller config 10)))))))
 
-(defn base-plate [config]
+(defn case-outline [config]
+  (let [{case-wall-thickness :case-wall-thickness
+         plate-thickness :plate-thickness
+         plate-border :plate-border} config
+        plate-shape (base-plate-shape config)
+        plate-cutout (-> (base-plate-shape config)
+                         (minkowski (cylinder plate-border 10)))]
+    (color [0.98 0.92 0.6 1] (-> plate-shape
+                                 (minkowski (cylinder case-wall-thickness plate-thickness))
+                                 (difference plate-cutout)
+                                 ))
+    ))
+
+#_(defn base-plate [config]
   (let [{layer-thickness :plate-thickness
          plate-border :plate-border
          {cap-x :x
@@ -222,7 +241,7 @@
   (let [{{cap-x :x
           cap-y :y} :keycap-dimensions
          kerf :keycap-kerf} config
-        base-plate (base-plate config)
+        base-plate (base-plate-shape config)
         cap-cutouts (place-at-key-positions config (cube (+ cap-x (* 2 kerf))
                                                          (+ cap-y (* 2 kerf))
                                                          25))]
@@ -253,7 +272,7 @@
 (defn frame-layer [config]
   (let [{layer-thickness :layer-thickness
          strut-poss :strut-positions} config
-        base-plate (base-plate config)
+        base-plate (base-plate-shape config)
         cutout-right (apply hull (place-at-key-positions config (single-cutout config)))
         cutout (hull (mirror-halves cutout-right))
         cutout-controller (translate [0 65 0] (cube 28 30 5))
@@ -292,7 +311,7 @@
                  (translate [0 0 (* 2 explode)] battery)
                  (translate [0 0 explode] keycaps)
                  (translate [0 0 (* plate-thickness explode)] (plate-layer config)) 
-                 #_(translate [0 0 (* layer-thickness explode)] (top-layer config)) 
+                 (translate [0 0 (* layer-thickness explode)] (case-outline config)) 
                  #_(plate-layer-upper config)
                  #_(translate [0 0 (- (* 1 plate-thickness explode))] (plate-layer-lower config))
                  #_(translate [0 0 (- (* 2 plate-thickness explode))] (frame-layer config))
@@ -308,7 +327,7 @@
         nano-model (create-model (deep-merge redpoll redpoll-nano))
         ]
     (union redpoll-model
-           #_(translate [0 120 0] nano-model)
+           (translate [0 140 0] nano-model)
            )))
 #_(defn all-layers []
     (union

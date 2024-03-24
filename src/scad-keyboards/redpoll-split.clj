@@ -23,19 +23,20 @@
               :cutout-dimensions {:x 13.96 :y 13.96}
               :key-distance {:x 19.0 :y 19.0}
               :keycap-kerf 0.75
-              :mirror true
+              :mirror false
 
               :opening-angle (deg2rad 14)
               :plate-thickness 1.5
               :layer-thickness 2
               :plate-border 2
               ;; :plate-mirror-edge {:min 22 :max 101 :x 3}  ;; Obere Kante gerade weiter führen
-              :plate-mirror-edge {:min 38 :max 96.5 :x 3}  ;; where the halves touch
+              :plate-mirror-edge {:min 38 :max 96.1 :x 3}  ;; where the halves touch
               ;; :plate-mirror-edge {:min 22 :max 84 :x 3}  ;; parallel zur Unterkante
               :controller {:x 12 :y 85 :z -1 
                            :w 18 :d 23 :h 1.5} ;; Seeed XIAO BLE
-              :battery {:x 16 :y 22 :z 3
-                        :w 20 :d 35 :h 6.5}
+              :battery {:x 15 :y 26 :z -4
+                        :w 17 :d 40 :h 5.8}
+              ;; :battery {:x 15 :y 25 :z 3 :w 17 :d 40 :h 6.5}   ;; https://www.mylipo.de/Lipo-Akku-240mAh-37V-25C-50C-BLADE-mcp-x-nano-QX-3D
               ;; {:w 20 :d 35 :h 6.5}  https://www.mylipo.de/Lipo-Akku-250mAh-37V-25C-50C-GENIUS-CP-WALKERA
               ;; {:w 20 :d 35 :h 5}  https://www.mylipo.de/Lipo-Akku-180mAh-37V-25C-50C
               ;; {:w 11 :d 42 :h 5.8}  https://www.mylipo.de/Lipo-Akku-150mAh-37V-25C-50CJST-PH125-2-Pin-Stecker
@@ -50,7 +51,7 @@
                        :clusters [{:rows 3
                                    :cols 6
                                    :staggers [[0 5] [0 7] [0 15] [0 11] [0 1] [0 0]]
-                                   :offset [0 1]
+                                   :offset [0 0]
                                    :additional-positions [[1 3]]}  ;; fingers
                                   {:rows 1 
                                    :cols 4
@@ -159,8 +160,10 @@
   (/ (reduce + vals) (count vals)))
 
 (defn plate-layer [config]
-  (let [{{dist-x :x
-          dist-y :y} :cutout-dimensions
+  (let [{{dim-x :x
+          dim-y :y} :cutout-dimensions
+         {dist-x :x
+          dist-y :y} :key-distance
          plate-border :plate-border
          plate-thickness :plate-thickness
          {mirror-y-min :min
@@ -170,19 +173,24 @@
                                       (cube 0.01
                                             (- mirror-y-max mirror-y-min)
                                             0.01))
-        dummy (cube dist-x dist-y 0.01)]
+        dummy (cube dim-x dim-y 0.01)
+        base-plate (->> mirror-edge-helper
+                        (conj (place-at-key-positions config dummy))
+                        (apply hull))
+        case-cut-x (-> (- dist-x dim-x)
+                       (+ dist-x))
+        case-cut-y (-> (- dist-y dim-y)
+                       (+ dist-y))
+        case-cutout (cube case-cut-x case-cut-y 10)]
     (binding [scad-clj.model/*fa* 2
-              scad-clj.model/*fn* 50  ;; low 10, medium 30, high 50
+              scad-clj.model/*fn* 10  ;; low 10, medium 30, high 50
               scad-clj.model/*fs* 0.1]
-      (difference
-       (minkowski
-        (apply hull
-               (conj (place-at-key-positions config dummy)
-                     mirror-edge-helper))
-        ;; cutout controller etc.
-        (cylinder plate-border plate-thickness))
-       (place-at-key-positions config (single-cutout config))
-       (controller config 10)))))
+      (-> base-plate
+          (difference (map (partial place-shape config case-cutout [0 3]) [[-1 0] [-1 1] [-1 2] [-1 3] [-1 4]]))
+          (difference (map (partial place-shape config case-cutout [0 5]) [[0 3] [0 4]]))
+          (minkowski (cylinder plate-border plate-thickness))
+          (difference (place-at-key-positions config (single-cutout config)))
+          (difference (controller config 10))))))
 
 (defn base-plate [config]
   (let [{layer-thickness :plate-thickness
@@ -300,7 +308,7 @@
         nano-model (create-model (deep-merge redpoll redpoll-nano))
         ]
     (union redpoll-model
-           (translate [0 120 0] nano-model)
+           #_(translate [0 120 0] nano-model)
            )))
 #_(defn all-layers []
     (union

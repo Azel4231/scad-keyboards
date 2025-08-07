@@ -3,6 +3,7 @@
   :url "http://example.com/FIXME"
   :main scad-keyboards.redpoll
   :license {:name "AGPL v3"}
+  :sources "src"
   :dependencies [[org.clojure/clojure "1.11.0"]
                  [scad-clj "0.5.3"]])
 

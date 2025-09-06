@@ -4,7 +4,7 @@
 ; eval file
 ; open ./things/redpoll.scad in openScad
 
-(ns redpoll
+(ns azelusMK5
   (:refer-clojure :exclude [use import])
   (:require [scad-clj.scad :refer [write-scad]]
             [scad-clj.model :refer [translate rotate intersection union hull difference cube color mirror cylinder project]]))
@@ -14,46 +14,36 @@
 (defn deg2rad [degrees]
   (* (/ degrees 180) PI))
 
-(def redpoll {:opening-angle (deg2rad 18)
-              :cutout-dimensions {:x 13.85 :y 13.85}
-              :key-distance {:x 18.0 :y 17.0}
-              :keycap-kerf 0.75
-              :plate-thickness 1.5
-              :plate-border 4
-              :mirror-offset [30 0]
-              :keycap-dimensions {:x 17.5 :y 16.5 :z 3}
-              :plate-mirror-edge {:min -37 :max 85}
-              :screwhole-radius 0.6
-              :screwhole-positions [[4 2.8] [4 -0.8] [1.2 4.4]]
-              :strut-positions [[4 2.9] [4 -0.9]]
-              :thumb-screwhole-positions [[3.8 0] [-0.75 -0.15]]
-              :thumb-strut-positions [[3.8 0] [-0.75 -0.2]]
+(def base-config {:opening-angle (deg2rad 14)
+                  :cutout-dimensions {:x 13.98 :y 13.98}
+                  :key-distance {:x 19.0 :y 19.0}
+                  :keycap-kerf 0.75
+                  :plate-thickness 1.5
+                  :plate-border 4
+                  :mirror-offset [27.5 0]
+                  :keycap-dimensions {:x 18 :y 18 :z 10}
+                  :plate-mirror-edge {:min -37 :max 87}
+                  :screwhole-radius 0.6
+                  :screwhole-positions [[4 2.8] [4 -0.8] [1.2 4.4]]
+                  :strut-positions [[4 2.9] [4 -0.9]]
+                  :thumb-screwhole-positions [[3.8 0] [-0.75 -0.15]]
+                  :thumb-strut-positions [[3.8 0] [-0.75 -0.2]]
 
-              :row-number 3
-              :col-number 6
-              :col-staggers [8 12 20 15 3 0]
-              :excluded-grid-positions #{}
-              :additional-grid-positions #{[1 3]}
+                  :row-number 3
+                  :col-number 6
+                  :col-staggers [8 12 20 15 3 0]
+                  :excluded-grid-positions #{}
+                  :additional-grid-positions #{[1 3]  [5 3]}
 
-              :thumb-row-number 1
-              :thumb-col-number 4
-              :thumb-offset [12 -20]
-              :thumb-staggers [0 0 0 4]})
+                  :thumb-row-number 1
+                  :thumb-col-number 4
+                  :thumb-offset-u [-1 -0.8]
+                  :thumb-staggers [0 0 0 12]})
 
-(def redpoll-steno {:opening-angle (deg2rad 15)
-                    :plate-border 3
-                    :mirror-offset [20 0]
-                    :cutout-dimensions {:x 13.98 :y 13.98}
-                    :key-distance {:x 19.0 :y 19.0}
-                    :keycap-dimensions {:x 18 :y 18 :z 10}
-                    :plate-mirror-edge {:min -37 :max 72}
+(def config-variant {
 
-                    :row-number 2
-                    :col-staggers [10 12 20 15 5 2]
-                    :additional-grid-positions #{[1 2]}
-
-                    :thumb-col-number 2
-                    :thumb-offset [12 -22]})
+                     :col-staggers [10 12 20 15 5 2]
+                     :additional-grid-positions #{[1 3]}})
 
 
 
@@ -62,12 +52,12 @@
           dist-y :y} :key-distance
          angle :opening-angle} config]
     (->> shape
+         (translate [offset-x offset-y 0])
          (translate [(* row dist-x) 
                      (+ (* col dist-y) 
                         (get staggers row 0))
                      0])
          (rotate angle [0 0 1])
-         (translate [offset-x offset-y 0])
          )))
 
 (defn single-hole [config kerf]
@@ -82,7 +72,11 @@
 
 (defn place-at-thumb-position [config shape position]
   (let [{thumb-staggers :thumb-staggers
-         thumb-offset :thumb-offset} config]
+         base-offset :mirror-offset
+         key-distance :key-distance
+         thumb-offset-units :thumb-offset-u} config
+        thumb-offset (->> (map * (vals key-distance) thumb-offset-units)
+                          (map + base-offset))]
     (place-shape config shape thumb-offset thumb-staggers position)))
 
 (defn place-at-key-positions [config shape]
@@ -248,10 +242,10 @@
   )
 
 (defn create-multi-model []
-  (let [redpoll-steno (create-model (merge redpoll redpoll-steno))
-        redpoll (create-model redpoll)]
-    (union redpoll
-           (translate [0 150 0] redpoll-steno)
+  (let [variant (create-model (merge base-config config-variant))
+        base-model (create-model base-config)]
+    (union base-model
+           (translate [0 150 0] variant)
            )))
 
 (defn all-layers [config]
@@ -264,13 +258,13 @@
    #_(color [0.5 0.5 0.5] (translate [-100 150 -20] (cube 495 1000 1.5)))))
 
 (defn run []
-    (spit "things/redpoll.scad"
+    (spit "things/mk5/azelusmk5.scad"
                    (write-scad (create-multi-model)))
-    (spit "things/top.scad" (write-scad (project (top-layer redpoll))))
-    (spit "things/plate-upper.scad" (write-scad (project (plate-layer-upper redpoll))))
-    (spit "things/plate-lower.scad" (write-scad (project (plate-layer-lower redpoll))))
-    (spit "things/frame.scad" (write-scad (project (frame-layer redpoll))))
-    (spit "things/bottom.scad" (write-scad (project (bottom-layer redpoll))))
-    (spit "things/all.scad" (write-scad (project (all-layers redpoll)))))
+    (spit "things/mk5/top.scad" (write-scad (project (top-layer base-config))))
+    (spit "things/mk5/plate-upper.scad" (write-scad (project (plate-layer-upper base-config))))
+    (spit "things/mk5/plate-lower.scad" (write-scad (project (plate-layer-lower base-config))))
+    (spit "things/mk5/frame.scad" (write-scad (project (frame-layer base-config))))
+    (spit "things/mk5/bottom.scad" (write-scad (project (bottom-layer base-config))))
+    (spit "things/mk5/all.scad" (write-scad (project (all-layers base-config)))))
 
 (run)

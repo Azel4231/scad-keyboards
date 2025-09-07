@@ -19,10 +19,13 @@
                   :key-distance {:x 19.0 :y 19.0}
                   :keycap-kerf 0.75
                   :plate-thickness 1.5
-                  :plate-border 4
+                  :plate-border 3
                   :mirror-offset [27.5 0]
                   :keycap-dimensions {:x 18 :y 18 :z 10}
-                  :plate-mirror-edge {:min -37 :max 87}
+                  :plate-mirror-edge {:min -28 :max 96 :top-width 50}
+                  :controller {:w 18 :d 33.5 :h 1.5}
+                  :controller-top-wall 2
+
                   :screwhole-radius 0.6
                   :screwhole-positions [[4 2.8] [4 -0.8] [1.2 4.4]]
                   :strut-positions [[4 2.9] [4 -0.9]]
@@ -31,19 +34,20 @@
 
                   :row-number 3
                   :col-number 6
-                  :col-staggers [8 12 20 15 3 0]
+                  :col-staggers [10 12 20 15 5 2]
                   :excluded-grid-positions #{}
-                  :additional-grid-positions #{[1 3]  [5 3]}
+                  :additional-grid-positions #{[1 3]}
 
                   :thumb-row-number 1
                   :thumb-col-number 4
-                  :thumb-offset-u [-1 -0.8]
+                  ;; multiples of key-distance
+                  :thumb-offset-units [-1 -0.8]
                   :thumb-staggers [0 0 0 12]})
 
-(def config-variant {
+(def config-variant {:plate-mirror-edge {:min -29 :max 95 :top-width 30}
 
-                     :col-staggers [10 12 20 15 5 2]
-                     :additional-grid-positions #{[1 3]}})
+                     :col-staggers [8 12 20 15 3 -1]
+                     :additional-grid-positions #{[1 3] [5 3]}})
 
 
 
@@ -53,12 +57,11 @@
          angle :opening-angle} config]
     (->> shape
          (translate [offset-x offset-y 0])
-         (translate [(* row dist-x) 
-                     (+ (* col dist-y) 
+         (translate [(* row dist-x)
+                     (+ (* col dist-y)
                         (get staggers row 0))
                      0])
-         (rotate angle [0 0 1])
-         )))
+         (rotate angle [0 0 1]))))
 
 (defn single-hole [config kerf]
   (let [{{cutout-width :x
@@ -74,7 +77,7 @@
   (let [{thumb-staggers :thumb-staggers
          base-offset :mirror-offset
          key-distance :key-distance
-         thumb-offset-units :thumb-offset-u} config
+         thumb-offset-units :thumb-offset-units} config
         thumb-offset (->> (map * (vals key-distance) thumb-offset-units)
                           (map + base-offset))]
     (place-shape config shape thumb-offset thumb-staggers position)))
@@ -86,17 +89,17 @@
          thumb-col-number :thumb-col-number
          excluded :excluded-grid-positions
          additional :additional-grid-positions} config]
-    (concat 
-           (->> (for [col-idx (range col-number)
-                      row-idx (range row-number)]
-                  [col-idx row-idx])
-                (remove excluded)
-                (concat additional)
-                (map (partial place-at-finger-position config shape)))
-           (->> (for [col-idx (range thumb-col-number)
-                      row-idx (range thumb-row-number)]
-                  [col-idx row-idx])
-                (map (partial place-at-thumb-position config shape))))))
+    (concat
+     (->> (for [col-idx (range col-number)
+                row-idx (range row-number)]
+            [col-idx row-idx])
+          (remove excluded)
+          (concat additional)
+          (map (partial place-at-finger-position config shape)))
+     (->> (for [col-idx (range thumb-col-number)
+                row-idx (range thumb-row-number)]
+            [col-idx row-idx])
+          (map (partial place-at-thumb-position config shape))))))
 
 
 (defn keycap [config]
@@ -122,23 +125,29 @@
 (defn base-plate [config]
   (let [{plate-thickness :plate-thickness
          plate-border :plate-border
-         {cap-x :x 
+         {cap-x :x
           cap-y :y} :keycap-dimensions
-         {mirror-y-min :min 
-          mirror-y-max :max} :plate-mirror-edge} config
+         {mirror-y-min :min
+          mirror-y-max :max
+          top-width :top-width} :plate-mirror-edge} config
         mirror-edge-helper (translate [0 (average mirror-y-max mirror-y-min) 0]
-                                     (cube 0.1
-                                           (- mirror-y-max mirror-y-min)
-                                           plate-thickness))]
-    (->> (cube (+ cap-x (* 2 plate-border)) 
-               (+ cap-y (* 2 plate-border)) 
+                                      (cube 0.01
+                                            (- mirror-y-max mirror-y-min)
+                                            plate-thickness))
+        mirror-top-helper (translate [0 mirror-y-max 0]
+                                     (cube  top-width
+                                            0.01
+                                            plate-thickness))]
+    (->> (cube (+ cap-x (* 2 plate-border))
+               (+ cap-y (* 2 plate-border))
                plate-thickness)
          (place-at-key-positions config)
          (cons mirror-edge-helper)
+         (cons mirror-top-helper)
          (apply hull)
-         (mirror-halves) 
+         (mirror-halves)
          (color [0.98 0.92 0.6 1]))))
-  
+
 (defn screw-holes [config]
   (let [{hole-poss :screwhole-positions
          thumb-hole-poss :thumb-screwhole-positions
@@ -158,44 +167,55 @@
                                             (cube (+ cap-x (* 2 kerf))
                                                   (+ cap-y (* 2 kerf))
                                                   25))]
-    (difference base-plate 
+    (difference base-plate
                 (mirror-halves cap-cutouts))))
 
 (defn plate-layer [config cutout-switch cutout-controller]
-  (let [base-plate (base-plate config)
+  (let [{{max-y :max} :plate-mirror-edge
+         {controller-height :d} :controller
+         controller-wall :controller-top-wall} config
+        top (- max-y controller-wall (/ controller-height 2))
+        base-plate (base-plate config)
         cutouts (mirror-halves (place-at-key-positions config cutout-switch))
-        cutout-battery (hull (translate [0 14 0] (cube 10 47 5))
-                             (translate [0 2 0] (cube 28 16 5)))]
+        cutout-battery (hull (translate [0 20 0] (cube 12 47 5))
+                             (translate [0 9 0] (cube 25 20 5)))]
     (union (difference base-plate
                        cutouts
                        cutout-battery
-                       cutout-controller
+                       (translate [0 top 0] cutout-controller)
                        (screw-holes config)))))
 
-(defn plate-layer-upper [config ]
-  (plate-layer config 
-               (single-hole config 0) 
-               (union (translate [0 65 0] (cube 18 33.5 5))
-                      (translate [0 66 0] (cube 9 33 5)))))
+(defn usb-c-cutout [contr-w contr-d]
+  (translate [0 1 0] (cube (/ contr-w 2) (dec contr-d) 5)))
+  
+(defn pcb-cutout [contr-w contr-d]
+  (cube contr-w contr-d 5))
+
+(defn controller-cutout [config]
+  (let [{{contr-w :w
+          contr-d :d} :controller} config]
+    (union (pcb-cutout contr-w contr-d)
+           (usb-c-cutout contr-w contr-d))))
+
+(defn plate-layer-upper [config]
+  (plate-layer config
+               (single-hole config 0)
+               (controller-cutout config)))
+
 
 (defn plate-layer-lower [config]
-  (let [cutout-controller (hull (translate [0 65 0] (cube 28 27 5))
-                                (translate [0 65 0] (cube 18 33.5 5)))
-        cutout-usb-c (translate [0 66 0] (cube 9 33 5))
-        cutout-power-switch (translate [20.4 80.3 0] (cube 7.2 10 5))
-        cutout-reset-button (translate [-19.7 80.3 0] (cube 6.2 11 5))]
+  (let [{{contr-w :w
+          contr-d :d} :controller} config
+        cutout-controller (hull (cube contr-w contr-d 5)
+                               (cube (+ contr-w 10) (- contr-d 6) 5))
+        cutout-usb-c (usb-c-cutout contr-w contr-d)
+        cutout-power-switch (translate [20 (/ contr-d 2) 0] (cube 7.2 10 5))]
     (plate-layer config
                  (single-hole config 1.2)
                  (union cutout-controller
                         cutout-usb-c
-                        cutout-power-switch
-                        cutout-reset-button))))
+                        cutout-power-switch))))
 
-(defn test-layer [config ]
-  (intersection (plate-layer-upper config)
-                (translate [18 50 0] (cube 60 80 5))))
-
-    
 (defn frame-layer [config]
   (let [{plate-thickness :plate-thickness
          strut-poss :strut-positions
@@ -208,15 +228,14 @@
         cutout-reset (translate [-18 75 0] (cube 10 8 5))
         struts-right (concat (map (partial place-at-finger-position config (cylinder 7 plate-thickness)) strut-poss)
                              (map (partial place-at-thumb-position config (cylinder 7 plate-thickness)) thumb-strut-poss))]
-    (difference (union 
+    (difference (union
                  (mirror-halves (map (partial intersection base-plate) struts-right))
                  (difference base-plate
                              (mirror-halves cutout)
                              cutout-controller
                              cutout-switch
-                             cutout-reset
-                             ))
-                 (screw-holes config))))
+                             cutout-reset))
+                (screw-holes config))))
 
 (defn bottom-layer [config]
   (difference (base-plate config)
@@ -227,44 +246,46 @@
 (defn create-model [config]
   (let [{plate-thickness :plate-thickness} config
         keycaps (mirror-halves (place-at-key-positions config (keycap config)))
-        explode 1]
+        explode 1
+        layers [keycaps
+                (top-layer config)
+                (plate-layer-upper config)
+                (plate-layer-lower config)
+                (plate-layer-lower config)
+                (frame-layer config)
+                (frame-layer config)
+                (bottom-layer config)]] 
     (union
-     (translate [0 0 (* 5 explode)] keycaps)
-     (translate [0 0 (* plate-thickness explode)] (top-layer config)) 
-     (plate-layer-upper config)
-     (translate [0 0 (- (* 1 plate-thickness explode))] (plate-layer-lower config))
-     (translate [0 0 (- (* 2 plate-thickness explode))] (frame-layer config))
-     (translate [0 0 (- (* 3 plate-thickness explode))] (bottom-layer config))
-     #_(->> (cube 200 200 5)
-            (rotate (/ PI 4) [0 0 1])
-            (translate [0 45 (- (* 4 plate-thickness explode))])
-            (color [0.8 0.8 0.8 0.5])))) 
-  )
+     (->> layers
+          (map-indexed #(translate [0 0 (- (* %1 plate-thickness explode))] %2))))))
 
 (defn create-multi-model []
   (let [variant (create-model (merge base-config config-variant))
         base-model (create-model base-config)]
-    (union base-model
-           (translate [0 150 0] variant)
-           )))
+    base-model
+    #_(union base-model
+           (translate [0 150 0] variant))))
 
 (defn all-layers [config]
   (union
    (translate [0 0 0] (top-layer config))
+   (translate [-270 -150 0] (plate-layer-upper config))
    (translate [0 -150 0] (plate-layer-lower config))
-   (translate [0 -300 0] (bottom-layer config))
-   (translate [-220 -210 0] (rotate (* PI 3/2) [0 0 1] (plate-layer-upper config)))
-   (translate [-250 -40 0] (rotate (* PI 1/2) [0 0 1] (frame-layer config)))
+   (translate [270 -150 0] (plate-layer-lower config))
+   (translate [-270 -300 0] (frame-layer config))
+   (translate [0 -300 0] (frame-layer config))
+   (translate [270 -300 0] (bottom-layer config))
+   #_(translate [-220 -210 0] (rotate (* PI 3/2) [0 0 1] (plate-layer-upper config)))
    #_(color [0.5 0.5 0.5] (translate [-100 150 -20] (cube 495 1000 1.5)))))
 
 (defn run []
-    (spit "things/mk5/azelusmk5.scad"
-                   (write-scad (create-multi-model)))
-    (spit "things/mk5/top.scad" (write-scad (project (top-layer base-config))))
-    (spit "things/mk5/plate-upper.scad" (write-scad (project (plate-layer-upper base-config))))
-    (spit "things/mk5/plate-lower.scad" (write-scad (project (plate-layer-lower base-config))))
-    (spit "things/mk5/frame.scad" (write-scad (project (frame-layer base-config))))
-    (spit "things/mk5/bottom.scad" (write-scad (project (bottom-layer base-config))))
-    (spit "things/mk5/all.scad" (write-scad (project (all-layers base-config)))))
+  (spit "things/mk5/azelusmk5.scad"
+        (write-scad (create-multi-model)))
+  (spit "things/mk5/top.scad" (write-scad (project (top-layer base-config))))
+  (spit "things/mk5/plate-upper.scad" (write-scad (project (plate-layer-upper base-config))))
+  (spit "things/mk5/plate-lower.scad" (write-scad (project (plate-layer-lower base-config))))
+  (spit "things/mk5/frame.scad" (write-scad (project (frame-layer base-config))))
+  (spit "things/mk5/bottom.scad" (write-scad (project (bottom-layer base-config))))
+  (spit "things/mk5/all.scad" (write-scad (project (all-layers base-config)))))
 
 (run)

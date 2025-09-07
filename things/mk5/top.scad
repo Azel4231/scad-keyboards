@@ -3,11 +3,11 @@ projection (cut = false) {
     color ([0.98, 0.92, 0.6, 1]) {
       union () {
         hull () {
-          translate ([0, 96, 0]) {
+          translate ([0, 98, 0]) {
             cube ([50, 0.01, 1.5], center=true);
           }
-          translate ([0, 34, 0]) {
-            cube ([0.01, 124, 1.5], center=true);
+          translate ([0, 35, 0]) {
+            cube ([0.01, 126, 1.5], center=true);
           }
           rotate (a=14.0, v=[0, 0, 1]) {
             translate ([19.0, 69.0, 0]) {
@@ -173,11 +173,11 @@ projection (cut = false) {
         }
         mirror ([1, 0, 0]) {
           hull () {
-            translate ([0, 96, 0]) {
+            translate ([0, 98, 0]) {
               cube ([50, 0.01, 1.5], center=true);
             }
-            translate ([0, 34, 0]) {
-              cube ([0.01, 124, 1.5], center=true);
+            translate ([0, 35, 0]) {
+              cube ([0.01, 126, 1.5], center=true);
             }
             rotate (a=14.0, v=[0, 0, 1]) {
               translate ([19.0, 69.0, 0]) {

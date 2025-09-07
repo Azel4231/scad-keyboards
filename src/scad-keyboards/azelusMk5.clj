@@ -22,13 +22,15 @@
                   :plate-border 3
                   :mirror-offset [27.5 0]
                   :keycap-dimensions {:x 18 :y 18 :z 10}
-                  :plate-mirror-edge {:min -28 :max 96 :top-width 50}
+                  :rubber-feet [{:w 10 :d 2 :h 3 :x 95 :y 80}
+                                {:w 2 :d 10 :h 3 :x 80 :y 5}] 
+                  :plate-mirror-edge {:min -28 :max 98 :top-width 50}
                   :controller {:w 18 :d 33.5 :h 1.5}
                   :controller-top-wall 2
 
                   :screwhole-radius 0.6
-                  :screwhole-positions [[4.9 2.7] [4.5 -0.5] [1.2 4.3]]
-                  :strut-positions [[4.9 2.7] [4.5 -0.5]]
+                  :screwhole-positions [[4.95 2.75] [4.5 -0.5] [1.2 4.3]]
+                  :strut-positions [[4.9 2.75] [4.5 -0.5]]
                   :thumb-screwhole-positions [[2.8 -0.2] [-0.68 -0.15]]
                   :thumb-strut-positions [[2.8 -0.2] [-0.68 -0.15]]
 
@@ -115,6 +117,28 @@
                                        (cube (* cap-x 0.7)
                                              (* cap-y 0.7)
                                              2)))))))
+
+(defn rubber-foot [config]
+  (let [{{feet-x :x
+          feet-y :y
+          feet-z :z} :rubber-feet-dimensions} config]
+    (color [0.3 0.3 0.3 1]
+           (translate [0 0 0]
+                      (cube feet-x
+                            feet-y
+                            feet-z)))))
+
+(defn rubber-feet [config]
+  (let [{feet-config :rubber-feet} config]
+    (map (fn [{x :x
+               y :y
+               w :w
+               d :d
+               h :h}]
+           (translate [x y -2] 
+                      (color [0.3 0.3 0.3 1]
+                             (cube w d h))))
+         feet-config)))
 
 (defn mirror-halves [shape]
   (union shape (mirror [1 0 0] shape)))
@@ -237,8 +261,8 @@
         cutout-controller (translate [0 65 0] (cube 28 30 5))
         cutout-switch (translate [18 75 0] (cube 12 8 5))
         cutout-reset (translate [-18 75 0] (cube 10 8 5))
-        struts-right (concat (map (partial place-at-finger-position config (cylinder 7 plate-thickness)) strut-poss)
-                             (map (partial place-at-thumb-position config (cylinder 7 plate-thickness)) thumb-strut-poss))]
+        struts-right (concat (map (partial place-at-finger-position config (cylinder 5 plate-thickness)) strut-poss)
+                             (map (partial place-at-thumb-position config (cylinder 5 plate-thickness)) thumb-strut-poss))]
     (difference (union
                  (mirror-halves (map (partial intersection base-plate) struts-right))
                  (difference base-plate
@@ -252,20 +276,20 @@
   (difference (base-plate config)
               (screw-holes config)))
 
-
-
 (defn create-model [config]
   (let [{plate-thickness :plate-thickness} config
         keycaps (mirror-halves (place-at-key-positions config (keycap config)))
+        rubber-feet (mirror-halves (rubber-feet config))
         explode 1
-        layers [keycaps
+        layers [#_keycaps
                 (top-layer config)
                 (plate-layer-upper config)
                 (plate-layer-lower1 config)
                 (plate-layer-lower2 config)
                 (frame-layer config)
                 (frame-layer config)
-                (bottom-layer config)]] 
+                #_(bottom-layer config)
+                rubber-feet]] 
     (union
      (->> layers
           (map-indexed #(translate [0 0 (- (* %1 plate-thickness explode))] %2))))))

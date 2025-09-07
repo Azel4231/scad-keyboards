@@ -4,11 +4,11 @@ projection (cut = false) {
       color ([0.98, 0.92, 0.6, 1]) {
         union () {
           hull () {
-            translate ([0, 96, 0]) {
+            translate ([0, 98, 0]) {
               cube ([50, 0.01, 1.5], center=true);
             }
-            translate ([0, 34, 0]) {
-              cube ([0.01, 124, 1.5], center=true);
+            translate ([0, 35, 0]) {
+              cube ([0.01, 126, 1.5], center=true);
             }
             rotate (a=14.0, v=[0, 0, 1]) {
               translate ([19.0, 69.0, 0]) {
@@ -174,11 +174,11 @@ projection (cut = false) {
           }
           mirror ([1, 0, 0]) {
             hull () {
-              translate ([0, 96, 0]) {
+              translate ([0, 98, 0]) {
                 cube ([50, 0.01, 1.5], center=true);
               }
-              translate ([0, 34, 0]) {
-                cube ([0.01, 124, 1.5], center=true);
+              translate ([0, 35, 0]) {
+                cube ([0.01, 126, 1.5], center=true);
               }
               rotate (a=14.0, v=[0, 0, 1]) {
                 translate ([19.0, 69.0, 0]) {
@@ -679,7 +679,7 @@ projection (cut = false) {
           cube ([25, 20, 5], center=true);
         }
       }
-      translate ([0, 77.25, 0]) {
+      translate ([0, 79.25, 0]) {
         union () {
           cube ([18, 33.5, 5], center=true);
           translate ([0, 1, 0]) {
@@ -689,7 +689,7 @@ projection (cut = false) {
       }
       union () {
         rotate (a=14.0, v=[0, 0, 1]) {
-          translate ([93.10000000000001, 51.300000000000004, 0]) {
+          translate ([94.05, 52.25, 0]) {
             translate ([27.5, 0, 0]) {
               color ([0, 0, 0, 1]) {
                 cylinder (h=15, r=0.6, center=true);
@@ -735,7 +735,7 @@ projection (cut = false) {
         }
         mirror ([1, 0, 0]) {
           rotate (a=14.0, v=[0, 0, 1]) {
-            translate ([93.10000000000001, 51.300000000000004, 0]) {
+            translate ([94.05, 52.25, 0]) {
               translate ([27.5, 0, 0]) {
                 color ([0, 0, 0, 1]) {
                   cylinder (h=15, r=0.6, center=true);

@@ -27,10 +27,10 @@
                   :controller-top-wall 2
 
                   :screwhole-radius 0.6
-                  :screwhole-positions [[4 2.8] [4 -0.8] [1.2 4.4]]
-                  :strut-positions [[4 2.9] [4 -0.9]]
-                  :thumb-screwhole-positions [[3.8 0] [-0.75 -0.15]]
-                  :thumb-strut-positions [[3.8 0] [-0.75 -0.2]]
+                  :screwhole-positions [[4.9 2.7] [4.5 -0.5] [1.2 4.3]]
+                  :strut-positions [[4.9 2.7] [4.5 -0.5]]
+                  :thumb-screwhole-positions [[2.8 -0.2] [-0.68 -0.15]]
+                  :thumb-strut-positions [[2.8 -0.2] [-0.68 -0.15]]
 
                   :row-number 3
                   :col-number 6
@@ -202,19 +202,30 @@
                (single-hole config 0)
                (controller-cutout config)))
 
-
-(defn plate-layer-lower [config]
+(defn plate-layer-lower [config additional-cutout]
   (let [{{contr-w :w
           contr-d :d} :controller} config
         cutout-controller (hull (cube contr-w contr-d 5)
                                (cube (+ contr-w 10) (- contr-d 6) 5))
-        cutout-usb-c (usb-c-cutout contr-w contr-d)
-        cutout-power-switch (translate [20 (/ contr-d 2) 0] (cube 7.2 10 5))]
+        cutout-usb-c (usb-c-cutout contr-w contr-d)]
     (plate-layer config
                  (single-hole config 1.2)
                  (union cutout-controller
                         cutout-usb-c
-                        cutout-power-switch))))
+                        additional-cutout))))
+
+(defn plate-layer-lower1 [config]
+  (let [{{contr-d :d} :controller} config]
+    (plate-layer-lower config (translate [20 (/ contr-d 2) 0] (cube 7.2 10 5)))))
+
+(defn plate-layer-lower2 [config]
+  (let [{{contr-d :d} :controller
+          controller-wall :controller-top-wall} config]
+    (plate-layer-lower config (translate [20 
+                                          (- (/ contr-d 2) 
+                                             (* 2 controller-wall)) 
+                                          0] 
+                                         (cube 7.2 5 5)))))
 
 (defn frame-layer [config]
   (let [{plate-thickness :plate-thickness
@@ -250,8 +261,8 @@
         layers [keycaps
                 (top-layer config)
                 (plate-layer-upper config)
-                (plate-layer-lower config)
-                (plate-layer-lower config)
+                (plate-layer-lower1 config)
+                (plate-layer-lower2 config)
                 (frame-layer config)
                 (frame-layer config)
                 (bottom-layer config)]] 
@@ -259,31 +270,32 @@
      (->> layers
           (map-indexed #(translate [0 0 (- (* %1 plate-thickness explode))] %2))))))
 
-(defn create-multi-model []
-  (let [variant (create-model (merge base-config config-variant))
-        base-model (create-model base-config)]
-    base-model
-    #_(union base-model
-           (translate [0 150 0] variant))))
-
 (defn all-layers [config]
   (union
-   (translate [0 0 0] (top-layer config))
+   (translate [270 0 0] (top-layer config))
    (translate [-270 -150 0] (plate-layer-upper config))
-   (translate [0 -150 0] (plate-layer-lower config))
-   (translate [270 -150 0] (plate-layer-lower config))
+   (translate [0 -150 0] (plate-layer-lower1 config))
+   (translate [270 -150 0] (plate-layer-lower2 config))
    (translate [-270 -300 0] (frame-layer config))
    (translate [0 -300 0] (frame-layer config))
    (translate [270 -300 0] (bottom-layer config))
    #_(translate [-220 -210 0] (rotate (* PI 3/2) [0 0 1] (plate-layer-upper config)))
    #_(color [0.5 0.5 0.5] (translate [-100 150 -20] (cube 495 1000 1.5)))))
 
+(defn create-multi-model []
+  (let [variant (create-model (merge base-config config-variant))
+        base-model (create-model base-config)]
+    (union base-model
+             (translate [0 0 0] (all-layers base-config)))))
+
+
 (defn run []
   (spit "things/mk5/azelusmk5.scad"
         (write-scad (create-multi-model)))
   (spit "things/mk5/top.scad" (write-scad (project (top-layer base-config))))
   (spit "things/mk5/plate-upper.scad" (write-scad (project (plate-layer-upper base-config))))
-  (spit "things/mk5/plate-lower.scad" (write-scad (project (plate-layer-lower base-config))))
+  (spit "things/mk5/plate-lower1.scad" (write-scad (project (plate-layer-lower1 base-config))))
+  (spit "things/mk5/plate-lower2.scad" (write-scad (project (plate-layer-lower1 base-config))))
   (spit "things/mk5/frame.scad" (write-scad (project (frame-layer base-config))))
   (spit "things/mk5/bottom.scad" (write-scad (project (bottom-layer base-config))))
   (spit "things/mk5/all.scad" (write-scad (project (all-layers base-config)))))

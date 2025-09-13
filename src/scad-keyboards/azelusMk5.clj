@@ -2,7 +2,7 @@
 ; lein nrepl
 ; connect to nrepl from IDE/Calva
 ; eval file
-; open ./things/redpoll.scad in openScad
+; open ./things/mk5/all.scad in openScad
 
 (ns azelusMK5
   (:refer-clojure :exclude [use import])
@@ -14,6 +14,9 @@
 (defn deg2rad [degrees]
   (* (/ degrees 180) PI))
 
+;; TODOs
+;; * Battery Hatch
+
 (def base-config {:opening-angle (deg2rad 14)
                   :cutout-dimensions {:x 13.98 :y 13.98}
                   :key-distance {:x 19.0 :y 19.0}
@@ -22,36 +25,51 @@
                   :plate-border 3
                   :mirror-offset [27.5 0]
                   :keycap-dimensions {:x 18 :y 18 :z 10}
-                  :rubber-feet [{:w 10 :d 2 :h 3 :x 95 :y 80}
-                                {:w 2 :d 10 :h 3 :x 80 :y 5}] 
-                  :plate-mirror-edge {:min -28 :max 98 :top-width 50}
+                  ;; Dimensions for the MacBook Pro keyboard:
+                  ;; The top feet are positioned in the gap between F-keys and number-row (thus x-distance between them can be arbitrary but less than 270mm).
+                  ;; The bottom feet are positioned in the the gap between option+command (left) and command+option (right), x-distance = 141.5 mm.
+                  ;; y-distance between top and bottom feet (centers): min 78, max 87 (due to location of the respective gaps (min = 73 max 92), and the 10mm height of the bottom feet). 
+                  ;; The pair of bottom feet is shifted 6mm to the left. That way the keyboard sits slightly off-center to the left and allows access to the MacBook's touch-id key.
+                  :rubber-feet [{:w 10 :d 2 :h 3 :x 110 :y 80}
+                                {:w 10 :d 2 :h 3 :x -110 :y 80}
+                                {:w 2 :d 10 :h 3 :x 67.75 :y -1}
+                                {:w 2 :d 10 :h 3 :x -73.75 :y 0}] 
+                  :plate-mirror-edge {:min -38 :max 88 :top-width 50}
                   :controller {:w 18 :d 33.5 :h 1.5}
                   :controller-top-wall 2
 
                   :screwhole-radius 0.6
-                  :screwhole-positions [[4.95 2.75] [4.5 -0.5] [1.2 4.3]]
-                  :strut-positions [[4.9 2.75] [4.5 -0.5]]
-                  :thumb-screwhole-positions [[2.8 -0.2] [-0.68 -0.15]]
-                  :thumb-strut-positions [[2.8 -0.2] [-0.68 -0.15]]
+                  :screwhole-positions [[4.8 2.25] [4.5 -1] [1.2 3.8]]
+                  :strut-positions [[4.8 2.75] [4.5 -1]]
+                  :thumb-screwhole-positions [[2.8 -0.2] [-0.81 -0.15]]
+                  :thumb-strut-positions [[2.8 -0.2] [-0.81 -0.15]]
 
                   :row-number 3
                   :col-number 6
-                  :col-staggers [10 12 20 15 5 2]
+                  :col-staggers [0 2 10 5 -5 -8]
                   :excluded-grid-positions #{}
                   :additional-grid-positions #{[1 3]}
 
                   :thumb-row-number 1
                   :thumb-col-number 4
                   ;; multiples of key-distance
-                  :thumb-offset-units [-1 -0.8]
-                  :thumb-staggers [0 0 0 12]})
+                  :thumb-offset-units [-1 -1.31]
+                  :thumb-staggers [0 0 0 13]})
 
 (def config-variant {:plate-mirror-edge {:min -29 :max 95 :top-width 30}
 
                      :col-staggers [8 12 20 15 3 -1]
                      :additional-grid-positions #{[1 3] [5 3]}})
 
-
+(let [{{key-dist :y} :key-distance
+       [_ y-offset] :thumb-offset-units
+       [_ _ _ thumb-stagger] :thumb-staggers
+       [_ _ col-stagger _ _ _] :col-staggers} base-config]
+  (prn "key-dist=" key-dist ", y-offset=" y-offset ", thumb-stagger=" thumb-stagger ", col-stagger=" col-stagger)
+  (prn "Distance from middle finger bottom key to forth thumb key: " (+ thumb-stagger
+                                                                        (* key-dist y-offset)
+                                                                        key-dist
+                                                                        (- col-stagger))))
 
 (defn place-shape [config shape [offset-x offset-y] staggers [row col]]
   (let [{{dist-x :x
@@ -279,16 +297,16 @@
 (defn create-model [config]
   (let [{plate-thickness :plate-thickness} config
         keycaps (mirror-halves (place-at-key-positions config (keycap config)))
-        rubber-feet (mirror-halves (rubber-feet config))
+        rubber-feet (rubber-feet config)
         explode 1
-        layers [#_keycaps
+        layers [keycaps
                 (top-layer config)
                 (plate-layer-upper config)
                 (plate-layer-lower1 config)
                 (plate-layer-lower2 config)
                 (frame-layer config)
                 (frame-layer config)
-                #_(bottom-layer config)
+                (bottom-layer config)
                 rubber-feet]] 
     (union
      (->> layers
@@ -296,7 +314,8 @@
 
 (defn all-layers [config]
   (union
-   (translate [270 0 0] (top-layer config))
+   (translate [270 0 0] (rubber-feet config))
+   (translate [-270 0 0] (top-layer config))
    (translate [-270 -150 0] (plate-layer-upper config))
    (translate [0 -150 0] (plate-layer-lower1 config))
    (translate [270 -150 0] (plate-layer-lower2 config))

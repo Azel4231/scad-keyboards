@@ -672,11 +672,37 @@ projection (cut = false) {
         }
       }
       hull () {
-        translate ([0, 20, 0]) {
-          cube ([12, 47, 5], center=true);
-        }
-        translate ([0, 9, 0]) {
-          cube ([25, 20, 5], center=true);
+        union () {
+          rotate (a=14.0, v=[0, 0, 1]) {
+            translate ([-17.1, -6.6499999999999995, 0]) {
+              translate ([27.5, 0, 0]) {
+                cube ([11.98, 13.98, 25], center=true);
+              }
+            }
+          }
+          rotate (a=14.0, v=[0, 0, 1]) {
+            translate ([-17.1, 34.2, 0]) {
+              translate ([27.5, 0, 0]) {
+                cube ([11.98, 13.98, 25], center=true);
+              }
+            }
+          }
+          mirror ([1, 0, 0]) {
+            rotate (a=14.0, v=[0, 0, 1]) {
+              translate ([-17.1, -6.6499999999999995, 0]) {
+                translate ([27.5, 0, 0]) {
+                  cube ([11.98, 13.98, 25], center=true);
+                }
+              }
+            }
+            rotate (a=14.0, v=[0, 0, 1]) {
+              translate ([-17.1, 34.2, 0]) {
+                translate ([27.5, 0, 0]) {
+                  cube ([11.98, 13.98, 25], center=true);
+                }
+              }
+            }
+          }
         }
       }
       translate ([0, 69.25, 0]) {
@@ -698,7 +724,7 @@ projection (cut = false) {
           }
         }
         rotate (a=14.0, v=[0, 0, 1]) {
-          translate ([85.5, -19.0, 0]) {
+          translate ([85.5, -19.95, 0]) {
             translate ([27.5, 0, 0]) {
               color ([0, 0, 0, 1]) {
                 cylinder (h=15, r=0.6, center=true);
@@ -716,7 +742,7 @@ projection (cut = false) {
           }
         }
         rotate (a=14.0, v=[0, 0, 1]) {
-          translate ([53.199999999999996, -3.8000000000000003, 0]) {
+          translate ([57.19, -3.8000000000000003, 0]) {
             translate ([8.5, -24.89, 0]) {
               color ([0, 0, 0, 1]) {
                 cylinder (h=15, r=0.6, center=true);
@@ -744,7 +770,7 @@ projection (cut = false) {
             }
           }
           rotate (a=14.0, v=[0, 0, 1]) {
-            translate ([85.5, -19.0, 0]) {
+            translate ([85.5, -19.95, 0]) {
               translate ([27.5, 0, 0]) {
                 color ([0, 0, 0, 1]) {
                   cylinder (h=15, r=0.6, center=true);
@@ -762,7 +788,7 @@ projection (cut = false) {
             }
           }
           rotate (a=14.0, v=[0, 0, 1]) {
-            translate ([53.199999999999996, -3.8000000000000003, 0]) {
+            translate ([57.19, -3.8000000000000003, 0]) {
               translate ([8.5, -24.89, 0]) {
                 color ([0, 0, 0, 1]) {
                   cylinder (h=15, r=0.6, center=true);

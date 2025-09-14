@@ -15,9 +15,14 @@
   (* (/ degrees 180) PI))
 
 ;; TODOs
-;; * Battery Hatch
+;; * resize Battery cutout
+;; * Round screw holes 
+;; * Battery Hatch (top layer)
 
-(def base-config {:opening-angle (deg2rad 14)
+(def base-config {:quality {:fa 2
+                            :fn 40  ;; low 10 (instantaneous), medium 30 (3mins), high 50 (??? mins)
+                            :fs 0.1}
+                  :opening-angle (deg2rad 14)
                   :cutout-dimensions {:x 13.98 :y 13.98}
                   :key-distance {:x 19.0 :y 19.0}
                   :keycap-kerf 0.75
@@ -30,19 +35,21 @@
                   ;; The bottom feet are positioned in the the gap between option+command (left) and command+option (right), x-distance = 141.5 mm.
                   ;; y-distance between top and bottom feet (centers): min 78, max 87 (due to location of the respective gaps (min = 73 max 92), and the 10mm height of the bottom feet). 
                   ;; The pair of bottom feet is shifted 6mm to the left. That way the keyboard sits slightly off-center to the left and allows access to the MacBook's touch-id key.
-                  :rubber-feet [{:w 10 :d 2 :h 3 :x 110 :y 80}
-                                {:w 10 :d 2 :h 3 :x -110 :y 80}
-                                {:w 2 :d 10 :h 3 :x 67.75 :y -1}
-                                {:w 2 :d 10 :h 3 :x -73.75 :y 0}] 
+                  :rubber-feet [{:w 10 :d 2 :h 3 :x 112 :y 70}
+                                {:w 10 :d 2 :h 3 :x -112 :y 70}
+                                {:w 2 :d 10 :h 3 :x 67.75 :y -11}
+                                {:w 2 :d 10 :h 3 :x -73.75 :y -10}]
                   :plate-mirror-edge {:min -38 :max 88 :top-width 50}
                   :controller {:w 18 :d 33.5 :h 1.5}
                   :controller-top-wall 2
 
                   :screwhole-radius 0.6
-                  :screwhole-positions [[4.8 2.25] [4.5 -1] [1.2 3.8]]
-                  :strut-positions [[4.8 2.75] [4.5 -1]]
-                  :thumb-screwhole-positions [[2.8 -0.2] [-0.81 -0.15]]
-                  :thumb-strut-positions [[2.8 -0.2] [-0.81 -0.15]]
+                  :screwhole-positions [[4.8 2.25] [4.5 -1.05] [1.2 3.8]]
+                  :strut-positions [[4.8 2.75] [4.5 -1.05]]
+                  :thumb-screwhole-positions [[3.01 -0.2] [-0.81 -0.15]]
+                  :thumb-strut-positions [[3.01 -0.2] [-0.81 -0.15]]
+
+                  :battery-cutout-positions [[-0.9 -0.35] [-0.9 1.8]]
 
                   :row-number 3
                   :col-number 6
@@ -83,10 +90,10 @@
                      0])
          (rotate angle [0 0 1]))))
 
-(defn single-hole [config kerf]
+(defn single-hole [config x-kerf y-kerf]
   (let [{{cutout-width :x
           cutout-height :y} :cutout-dimensions} config]
-    (cube (+ cutout-width kerf) cutout-height 25)))
+    (cube (+ cutout-width x-kerf) (+ cutout-height y-kerf) 25)))
 
 (defn place-at-finger-position [config shape position]
   (let [{col-staggers :col-staggers
@@ -136,16 +143,6 @@
                                              (* cap-y 0.7)
                                              2)))))))
 
-(defn rubber-foot [config]
-  (let [{{feet-x :x
-          feet-y :y
-          feet-z :z} :rubber-feet-dimensions} config]
-    (color [0.3 0.3 0.3 1]
-           (translate [0 0 0]
-                      (cube feet-x
-                            feet-y
-                            feet-z)))))
-
 (defn rubber-feet [config]
   (let [{feet-config :rubber-feet} config]
     (map (fn [{x :x
@@ -153,7 +150,7 @@
                w :w
                d :d
                h :h}]
-           (translate [x y -2] 
+           (translate [x y -2]
                       (color [0.3 0.3 0.3 1]
                              (cube w d h))))
          feet-config)))
@@ -164,7 +161,7 @@
 (defn average [& vals]
   (/ (reduce + vals) (count vals)))
 
-(defn base-plate [config]
+(defn base-outline [config]
   (let [{plate-thickness :plate-thickness
          plate-border :plate-border
          {cap-x :x
@@ -204,24 +201,26 @@
   (let [{{cap-x :x
           cap-y :y} :keycap-dimensions
          kerf :keycap-kerf} config
-        base-plate (base-plate config)
+        base-outline (base-outline config)
         cap-cutouts (place-at-key-positions config
                                             (cube (+ cap-x (* 2 kerf))
                                                   (+ cap-y (* 2 kerf))
                                                   25))]
-    (difference base-plate
+    (difference base-outline
                 (mirror-halves cap-cutouts))))
 
 (defn plate-layer [config cutout-switch cutout-controller]
   (let [{{max-y :max} :plate-mirror-edge
          {controller-height :d} :controller
-         controller-wall :controller-top-wall} config
+         controller-wall :controller-top-wall
+         battery-cutout-poss :battery-cutout-positions} config
         top (- max-y controller-wall (/ controller-height 2))
-        base-plate (base-plate config)
+        base-outline (base-outline config)
         cutouts (mirror-halves (place-at-key-positions config cutout-switch))
-        cutout-battery (hull (translate [0 20 0] (cube 12 47 5))
-                             (translate [0 9 0] (cube 25 20 5)))]
-    (union (difference base-plate
+        cutout-battery (hull (mirror-halves
+                              (map (partial place-at-finger-position config (single-hole config -2 0))
+                                   battery-cutout-poss)))]
+    (union (difference base-outline
                        cutouts
                        cutout-battery
                        (translate [0 top 0] cutout-controller)
@@ -229,7 +228,7 @@
 
 (defn usb-c-cutout [contr-w contr-d]
   (translate [0 1 0] (cube (/ contr-w 2) (dec contr-d) 5)))
-  
+
 (defn pcb-cutout [contr-w contr-d]
   (cube contr-w contr-d 5))
 
@@ -241,57 +240,65 @@
 
 (defn plate-layer-upper [config]
   (plate-layer config
-               (single-hole config 0)
+               (single-hole config 0 0)
                (controller-cutout config)))
 
 (defn plate-layer-lower [config additional-cutout]
   (let [{{contr-w :w
           contr-d :d} :controller} config
         cutout-controller (hull (cube contr-w contr-d 5)
-                               (cube (+ contr-w 10) (- contr-d 6) 5))
+                                (cube (+ contr-w 10) (- contr-d 6) 5))
         cutout-usb-c (usb-c-cutout contr-w contr-d)]
     (plate-layer config
-                 (single-hole config 1.2)
+                 (single-hole config 0 1.2)
                  (union cutout-controller
                         cutout-usb-c
                         additional-cutout))))
 
 (defn plate-layer-lower1 [config]
   (let [{{contr-d :d} :controller} config]
-    (plate-layer-lower config (translate [20 (/ contr-d 2) 0] (cube 7.2 10 5)))))
+    (plate-layer-lower config (translate [20 (/ contr-d 2) 0]
+                                         (cube 7.2 10 5)))))
 
 (defn plate-layer-lower2 [config]
   (let [{{contr-d :d} :controller
-          controller-wall :controller-top-wall} config]
-    (plate-layer-lower config (translate [20 
-                                          (- (/ contr-d 2) 
-                                             (* 2 controller-wall)) 
-                                          0] 
+         controller-wall :controller-top-wall} config]
+    (plate-layer-lower config (translate [20
+                                          (- (/ contr-d 2)
+                                             (* 2 controller-wall))
+                                          0]
                                          (cube 7.2 5 5)))))
 
 (defn frame-layer [config]
-  (let [{plate-thickness :plate-thickness
-         strut-poss :strut-positions
-         thumb-strut-poss :thumb-strut-positions} config
-        base-plate (base-plate config)
-        cutout-right (apply hull (place-at-key-positions config (single-hole config 0)))
-        cutout (hull (mirror-halves cutout-right))
-        cutout-controller (translate [0 65 0] (cube 28 30 5))
-        cutout-switch (translate [18 75 0] (cube 12 8 5))
-        cutout-reset (translate [-18 75 0] (cube 10 8 5))
-        struts-right (concat (map (partial place-at-finger-position config (cylinder 5 plate-thickness)) strut-poss)
-                             (map (partial place-at-thumb-position config (cylinder 5 plate-thickness)) thumb-strut-poss))]
-    (difference (union
-                 (mirror-halves (map (partial intersection base-plate) struts-right))
-                 (difference base-plate
-                             (mirror-halves cutout)
-                             cutout-controller
-                             cutout-switch
-                             cutout-reset))
-                (screw-holes config))))
+  (let [{{fa :fa
+          fn :fn
+          fs :fs} :quality} config]
+    ;; produce high quality mesh
+    (binding [scad-clj.model/*fa* fa
+              scad-clj.model/*fn* fn  ;; low 10 (instantaneous), medium 30 (3mins), high 50 (??? mins)
+              scad-clj.model/*fs* fs]
+      (let [{plate-thickness :plate-thickness
+             strut-poss :strut-positions
+             thumb-strut-poss :thumb-strut-positions} config
+            base-outline (base-outline config)
+            cutout-right (apply hull (place-at-key-positions config (single-hole config 0 0)))
+            cutout (hull (mirror-halves cutout-right))
+            cutout-controller (translate [0 65 0] (cube 28 30 5))
+            cutout-switch (translate [18 75 0] (cube 12 8 5))
+            cutout-reset (translate [-18 75 0] (cube 10 8 5))
+            struts-right (concat (map (partial place-at-finger-position config (cylinder 5 plate-thickness)) strut-poss)
+                                 (map (partial place-at-thumb-position config (cylinder 5 plate-thickness)) thumb-strut-poss))]
+        (difference (union
+                     (mirror-halves (map (partial intersection base-outline) struts-right))
+                     (difference base-outline
+                                 (mirror-halves cutout)
+                                 cutout-controller
+                                 cutout-switch
+                                 cutout-reset))
+                    (screw-holes config))))))
 
 (defn bottom-layer [config]
-  (difference (base-plate config)
+  (difference (base-outline config)
               (screw-holes config)))
 
 (defn create-model [config]
@@ -307,21 +314,21 @@
                 (frame-layer config)
                 (frame-layer config)
                 (bottom-layer config)
-                rubber-feet]] 
+                rubber-feet]]
     (union
      (->> layers
           (map-indexed #(translate [0 0 (- (* %1 plate-thickness explode))] %2))))))
 
 (defn all-layers [config]
   (union
-   (translate [270 0 0] (rubber-feet config))
-   (translate [-270 0 0] (top-layer config))
-   (translate [-270 -150 0] (plate-layer-upper config))
+   (translate [275 0 0] (rubber-feet config))
+   (translate [-275 0 0] (top-layer config))
+   (translate [-275 -150 0] (plate-layer-upper config))
    (translate [0 -150 0] (plate-layer-lower1 config))
-   (translate [270 -150 0] (plate-layer-lower2 config))
-   (translate [-270 -300 0] (frame-layer config))
+   (translate [275 -150 0] (plate-layer-lower2 config))
+   (translate [-275 -300 0] (frame-layer config))
    (translate [0 -300 0] (frame-layer config))
-   (translate [270 -300 0] (bottom-layer config))
+   (translate [275 -300 0] (bottom-layer config))
    #_(translate [-220 -210 0] (rotate (* PI 3/2) [0 0 1] (plate-layer-upper config)))
    #_(color [0.5 0.5 0.5] (translate [-100 150 -20] (cube 495 1000 1.5)))))
 
@@ -329,7 +336,7 @@
   (let [variant (create-model (merge base-config config-variant))
         base-model (create-model base-config)]
     (union base-model
-             (translate [0 0 0] (all-layers base-config)))))
+           (translate [0 0 0] (all-layers base-config)))))
 
 
 (defn run []

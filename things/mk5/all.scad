@@ -3,22 +3,22 @@ projection (cut = false) {
     translate ([275, 0, 0]) {
       translate ([112, 70, -2]) {
         color ([0.3, 0.3, 0.3, 1]) {
-          cube ([10, 2, 3], center=true);
+          cube ([10, 2, 2], center=true);
         }
       }
       translate ([-112, 70, -2]) {
         color ([0.3, 0.3, 0.3, 1]) {
-          cube ([10, 2, 3], center=true);
+          cube ([10, 2, 2], center=true);
         }
       }
       translate ([67.75, -11, -2]) {
         color ([0.3, 0.3, 0.3, 1]) {
-          cube ([2, 10, 3], center=true);
+          cube ([2, 10, 2], center=true);
         }
       }
       translate ([-73.75, -10, -2]) {
         color ([0.3, 0.3, 0.3, 1]) {
-          cube ([2, 10, 3], center=true);
+          cube ([2, 10, 2], center=true);
         }
       }
     }

@@ -15,12 +15,11 @@
   (* (/ degrees 180) PI))
 
 ;; TODOs
-;; * resize Battery cutout
-;; * Round screw holes 
 ;; * Battery Hatch (top layer)
+;; * Lid construction: nut and magnet placement
 
 (def base-config {:quality {:fa 2
-                            :fn 40  ;; low 10 (instantaneous), medium 30 (3mins), high 50 (??? mins)
+                            :fn 40  ;; low 10, medium 30, high 50
                             :fs 0.1}
                   :opening-angle (deg2rad 14)
                   :cutout-dimensions {:x 13.98 :y 13.98}
@@ -30,24 +29,28 @@
                   :plate-border 3
                   :mirror-offset [27.5 0]
                   :keycap-dimensions {:x 18 :y 18 :z 10}
-                  ;; Dimensions for the MacBook Pro keyboard:
-                  ;; The top feet are positioned in the gap between F-keys and number-row (thus x-distance between them can be arbitrary but less than 270mm).
-                  ;; The bottom feet are positioned in the the gap between option+command (left) and command+option (right), x-distance = 141.5 mm.
-                  ;; y-distance between top and bottom feet (centers): min 78, max 87 (due to location of the respective gaps (min = 73 max 92), and the 10mm height of the bottom feet). 
+                  ;; Rubber feet dimensions that match the MacBook Pro keyboard (ISO-DE):
+                  ;; The top feet are aligned horizontally and positioned in the gap between F-keys and number-row (thus x-distance between them can be arbitrary but less than 270mm).
+                  ;; The bottom feet are aligned vertically and positioned in the the gap between option+command (left) and command+option (right), x-distance = 141.5 mm.
+                  ;; y-distance between top and bottom feet (centers): min 78, max 87 (due to location of the respective gaps (min = 73 max 92) and the depth of the bottom feet (10mm)). 
                   ;; The pair of bottom feet is shifted 6mm to the left. That way the keyboard sits slightly off-center to the left and allows access to the MacBook's touch-id key.
-                  :rubber-feet [{:w 10 :d 2 :h 3 :x 112 :y 70}
-                                {:w 10 :d 2 :h 3 :x -112 :y 70}
-                                {:w 2 :d 10 :h 3 :x 67.75 :y -11}
-                                {:w 2 :d 10 :h 3 :x -73.75 :y -10}]
+                  ;; Width of the feet must be less than 2mm at the bottom. A trapezoid cross section is ideal so the top can be wider for more glued surface.
+                  ;; Height of the feet must be more than 1.5mm
+                  ;; Ideal base material are 10mm x 10mm x 2mm rubber feet, that can then be cut to dimension. This even allows cutting off height to eliminate wobble, in case the keyboard case is slightly bent.
+                  :rubber-feet [{:w 10 :d 2 :h 2 :x 112 :y 70}
+                                {:w 10 :d 2 :h 2 :x -112 :y 70}
+                                {:w 2 :d 10 :h 2 :x 67.75 :y -11}
+                                {:w 2 :d 10 :h 2 :x -73.75 :y -10}]
                   :plate-mirror-edge {:min -38 :max 88 :top-width 50}
                   :controller {:w 18 :d 33.5 :h 1.5}
                   :controller-top-wall 2
 
                   :screwhole-radius 0.6
                   :screwhole-positions [[4.8 2.25] [4.5 -1.05] [1.2 3.8]]
-                  :strut-positions [[4.8 2.75] [4.5 -1.05]]
+                  :strut-positions [[4.8 2.75 ] [4.5 -1.05]]
                   :thumb-screwhole-positions [[3.01 -0.2] [-0.81 -0.15]]
                   :thumb-strut-positions [[3.01 -0.2] [-0.81 -0.15]]
+                  :strut-radius 5
 
                   :battery-cutout-positions [[-0.9 -0.35] [-0.9 1.8]]
 
@@ -275,10 +278,11 @@
           fs :fs} :quality} config]
     ;; produce high quality mesh
     (binding [scad-clj.model/*fa* fa
-              scad-clj.model/*fn* fn  ;; low 10 (instantaneous), medium 30 (3mins), high 50 (??? mins)
+              scad-clj.model/*fn* fn 
               scad-clj.model/*fs* fs]
       (let [{plate-thickness :plate-thickness
              strut-poss :strut-positions
+             strut-radius :strut-radius
              thumb-strut-poss :thumb-strut-positions} config
             base-outline (base-outline config)
             cutout-right (apply hull (place-at-key-positions config (single-hole config 0 0)))
@@ -286,8 +290,8 @@
             cutout-controller (translate [0 65 0] (cube 28 30 5))
             cutout-switch (translate [18 75 0] (cube 12 8 5))
             cutout-reset (translate [-18 75 0] (cube 10 8 5))
-            struts-right (concat (map (partial place-at-finger-position config (cylinder 5 plate-thickness)) strut-poss)
-                                 (map (partial place-at-thumb-position config (cylinder 5 plate-thickness)) thumb-strut-poss))]
+            struts-right (concat (map (partial place-at-finger-position config (cylinder strut-radius plate-thickness)) strut-poss)
+                                 (map (partial place-at-thumb-position config (cylinder strut-radius plate-thickness)) thumb-strut-poss))]
         (difference (union
                      (mirror-halves (map (partial intersection base-outline) struts-right))
                      (difference base-outline

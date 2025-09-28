@@ -1765,7 +1765,7 @@ projection (cut = false) {
                 translate ([91.2, 42.75, 0]) {
                   translate ([27.5, 0, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -1774,7 +1774,7 @@ projection (cut = false) {
                 translate ([85.5, -19.95, 0]) {
                   translate ([27.5, 0, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -1783,7 +1783,7 @@ projection (cut = false) {
                 translate ([22.8, 72.2, 0]) {
                   translate ([27.5, 0, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -1792,7 +1792,7 @@ projection (cut = false) {
                 translate ([57.19, -3.8000000000000003, 0]) {
                   translate ([8.5, -24.89, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -1801,7 +1801,7 @@ projection (cut = false) {
                 translate ([-15.39, -2.85, 0]) {
                   translate ([8.5, -24.89, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -1811,7 +1811,7 @@ projection (cut = false) {
                   translate ([91.2, 42.75, 0]) {
                     translate ([27.5, 0, 0]) {
                       color ([0, 0, 0, 1]) {
-                        cylinder (h=15, r=0.6, center=true);
+                        cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                       }
                     }
                   }
@@ -1820,7 +1820,7 @@ projection (cut = false) {
                   translate ([85.5, -19.95, 0]) {
                     translate ([27.5, 0, 0]) {
                       color ([0, 0, 0, 1]) {
-                        cylinder (h=15, r=0.6, center=true);
+                        cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                       }
                     }
                   }
@@ -1829,7 +1829,7 @@ projection (cut = false) {
                   translate ([22.8, 72.2, 0]) {
                     translate ([27.5, 0, 0]) {
                       color ([0, 0, 0, 1]) {
-                        cylinder (h=15, r=0.6, center=true);
+                        cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                       }
                     }
                   }
@@ -1838,7 +1838,7 @@ projection (cut = false) {
                   translate ([57.19, -3.8000000000000003, 0]) {
                     translate ([8.5, -24.89, 0]) {
                       color ([0, 0, 0, 1]) {
-                        cylinder (h=15, r=0.6, center=true);
+                        cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                       }
                     }
                   }
@@ -1847,7 +1847,7 @@ projection (cut = false) {
                   translate ([-15.39, -2.85, 0]) {
                     translate ([8.5, -24.89, 0]) {
                       color ([0, 0, 0, 1]) {
-                        cylinder (h=15, r=0.6, center=true);
+                        cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                       }
                     }
                   }
@@ -1860,14 +1860,14 @@ projection (cut = false) {
           rotate (a=14.0, v=[0, 0, 1]) {
             translate ([75.05, 47.5, 0]) {
               translate ([27.5, 0, 0]) {
-                cylinder (h=10, r=3, center=true);
+                cylinder ($fa=2, $fn=40, $fs=0.1, h=10, r=3, center=true);
               }
             }
           }
           rotate (a=14.0, v=[0, 0, 1]) {
             translate ([58.9, -19.38, 0]) {
               translate ([27.5, 0, 0]) {
-                cylinder (h=10, r=3, center=true);
+                cylinder ($fa=2, $fn=40, $fs=0.1, h=10, r=3, center=true);
               }
             }
           }
@@ -1875,14 +1875,14 @@ projection (cut = false) {
             rotate (a=14.0, v=[0, 0, 1]) {
               translate ([75.05, 47.5, 0]) {
                 translate ([27.5, 0, 0]) {
-                  cylinder (h=10, r=3, center=true);
+                  cylinder ($fa=2, $fn=40, $fs=0.1, h=10, r=3, center=true);
                 }
               }
             }
             rotate (a=14.0, v=[0, 0, 1]) {
               translate ([58.9, -19.38, 0]) {
                 translate ([27.5, 0, 0]) {
-                  cylinder (h=10, r=3, center=true);
+                  cylinder ($fa=2, $fn=40, $fs=0.1, h=10, r=3, center=true);
                 }
               }
             }
@@ -2617,7 +2617,7 @@ projection (cut = false) {
                 translate ([91.2, 42.75, 0]) {
                   translate ([27.5, 0, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -2626,7 +2626,7 @@ projection (cut = false) {
                 translate ([85.5, -19.95, 0]) {
                   translate ([27.5, 0, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -2635,7 +2635,7 @@ projection (cut = false) {
                 translate ([22.8, 72.2, 0]) {
                   translate ([27.5, 0, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -2644,7 +2644,7 @@ projection (cut = false) {
                 translate ([57.19, -3.8000000000000003, 0]) {
                   translate ([8.5, -24.89, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -2653,7 +2653,7 @@ projection (cut = false) {
                 translate ([-15.39, -2.85, 0]) {
                   translate ([8.5, -24.89, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -2663,7 +2663,7 @@ projection (cut = false) {
                   translate ([91.2, 42.75, 0]) {
                     translate ([27.5, 0, 0]) {
                       color ([0, 0, 0, 1]) {
-                        cylinder (h=15, r=0.6, center=true);
+                        cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                       }
                     }
                   }
@@ -2672,7 +2672,7 @@ projection (cut = false) {
                   translate ([85.5, -19.95, 0]) {
                     translate ([27.5, 0, 0]) {
                       color ([0, 0, 0, 1]) {
-                        cylinder (h=15, r=0.6, center=true);
+                        cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                       }
                     }
                   }
@@ -2681,7 +2681,7 @@ projection (cut = false) {
                   translate ([22.8, 72.2, 0]) {
                     translate ([27.5, 0, 0]) {
                       color ([0, 0, 0, 1]) {
-                        cylinder (h=15, r=0.6, center=true);
+                        cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                       }
                     }
                   }
@@ -2690,7 +2690,7 @@ projection (cut = false) {
                   translate ([57.19, -3.8000000000000003, 0]) {
                     translate ([8.5, -24.89, 0]) {
                       color ([0, 0, 0, 1]) {
-                        cylinder (h=15, r=0.6, center=true);
+                        cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                       }
                     }
                   }
@@ -2699,7 +2699,7 @@ projection (cut = false) {
                   translate ([-15.39, -2.85, 0]) {
                     translate ([8.5, -24.89, 0]) {
                       color ([0, 0, 0, 1]) {
-                        cylinder (h=15, r=0.6, center=true);
+                        cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                       }
                     }
                   }
@@ -2712,14 +2712,14 @@ projection (cut = false) {
           rotate (a=14.0, v=[0, 0, 1]) {
             translate ([75.05, 47.5, 0]) {
               translate ([27.5, 0, 0]) {
-                cylinder (h=10, r=3, center=true);
+                cylinder ($fa=2, $fn=40, $fs=0.1, h=10, r=3, center=true);
               }
             }
           }
           rotate (a=14.0, v=[0, 0, 1]) {
             translate ([58.9, -19.38, 0]) {
               translate ([27.5, 0, 0]) {
-                cylinder (h=10, r=3, center=true);
+                cylinder ($fa=2, $fn=40, $fs=0.1, h=10, r=3, center=true);
               }
             }
           }
@@ -2727,14 +2727,14 @@ projection (cut = false) {
             rotate (a=14.0, v=[0, 0, 1]) {
               translate ([75.05, 47.5, 0]) {
                 translate ([27.5, 0, 0]) {
-                  cylinder (h=10, r=3, center=true);
+                  cylinder ($fa=2, $fn=40, $fs=0.1, h=10, r=3, center=true);
                 }
               }
             }
             rotate (a=14.0, v=[0, 0, 1]) {
               translate ([58.9, -19.38, 0]) {
                 translate ([27.5, 0, 0]) {
-                  cylinder (h=10, r=3, center=true);
+                  cylinder ($fa=2, $fn=40, $fs=0.1, h=10, r=3, center=true);
                 }
               }
             }
@@ -3468,7 +3468,7 @@ projection (cut = false) {
               translate ([91.2, 42.75, 0]) {
                 translate ([27.5, 0, 0]) {
                   color ([0, 0, 0, 1]) {
-                    cylinder (h=15, r=0.6, center=true);
+                    cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                   }
                 }
               }
@@ -3477,7 +3477,7 @@ projection (cut = false) {
               translate ([85.5, -19.95, 0]) {
                 translate ([27.5, 0, 0]) {
                   color ([0, 0, 0, 1]) {
-                    cylinder (h=15, r=0.6, center=true);
+                    cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                   }
                 }
               }
@@ -3486,7 +3486,7 @@ projection (cut = false) {
               translate ([22.8, 72.2, 0]) {
                 translate ([27.5, 0, 0]) {
                   color ([0, 0, 0, 1]) {
-                    cylinder (h=15, r=0.6, center=true);
+                    cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                   }
                 }
               }
@@ -3495,7 +3495,7 @@ projection (cut = false) {
               translate ([57.19, -3.8000000000000003, 0]) {
                 translate ([8.5, -24.89, 0]) {
                   color ([0, 0, 0, 1]) {
-                    cylinder (h=15, r=0.6, center=true);
+                    cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                   }
                 }
               }
@@ -3504,7 +3504,7 @@ projection (cut = false) {
               translate ([-15.39, -2.85, 0]) {
                 translate ([8.5, -24.89, 0]) {
                   color ([0, 0, 0, 1]) {
-                    cylinder (h=15, r=0.6, center=true);
+                    cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                   }
                 }
               }
@@ -3514,7 +3514,7 @@ projection (cut = false) {
                 translate ([91.2, 42.75, 0]) {
                   translate ([27.5, 0, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -3523,7 +3523,7 @@ projection (cut = false) {
                 translate ([85.5, -19.95, 0]) {
                   translate ([27.5, 0, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -3532,7 +3532,7 @@ projection (cut = false) {
                 translate ([22.8, 72.2, 0]) {
                   translate ([27.5, 0, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -3541,7 +3541,7 @@ projection (cut = false) {
                 translate ([57.19, -3.8000000000000003, 0]) {
                   translate ([8.5, -24.89, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -3550,7 +3550,7 @@ projection (cut = false) {
                 translate ([-15.39, -2.85, 0]) {
                   translate ([8.5, -24.89, 0]) {
                     color ([0, 0, 0, 1]) {
-                      cylinder (h=15, r=0.6, center=true);
+                      cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                     }
                   }
                 }
@@ -11813,7 +11813,7 @@ projection (cut = false) {
             translate ([91.2, 42.75, 0]) {
               translate ([27.5, 0, 0]) {
                 color ([0, 0, 0, 1]) {
-                  cylinder (h=15, r=0.6, center=true);
+                  cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                 }
               }
             }
@@ -11822,7 +11822,7 @@ projection (cut = false) {
             translate ([85.5, -19.95, 0]) {
               translate ([27.5, 0, 0]) {
                 color ([0, 0, 0, 1]) {
-                  cylinder (h=15, r=0.6, center=true);
+                  cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                 }
               }
             }
@@ -11831,7 +11831,7 @@ projection (cut = false) {
             translate ([22.8, 72.2, 0]) {
               translate ([27.5, 0, 0]) {
                 color ([0, 0, 0, 1]) {
-                  cylinder (h=15, r=0.6, center=true);
+                  cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                 }
               }
             }
@@ -11840,7 +11840,7 @@ projection (cut = false) {
             translate ([57.19, -3.8000000000000003, 0]) {
               translate ([8.5, -24.89, 0]) {
                 color ([0, 0, 0, 1]) {
-                  cylinder (h=15, r=0.6, center=true);
+                  cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                 }
               }
             }
@@ -11849,7 +11849,7 @@ projection (cut = false) {
             translate ([-15.39, -2.85, 0]) {
               translate ([8.5, -24.89, 0]) {
                 color ([0, 0, 0, 1]) {
-                  cylinder (h=15, r=0.6, center=true);
+                  cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                 }
               }
             }
@@ -11859,7 +11859,7 @@ projection (cut = false) {
               translate ([91.2, 42.75, 0]) {
                 translate ([27.5, 0, 0]) {
                   color ([0, 0, 0, 1]) {
-                    cylinder (h=15, r=0.6, center=true);
+                    cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                   }
                 }
               }
@@ -11868,7 +11868,7 @@ projection (cut = false) {
               translate ([85.5, -19.95, 0]) {
                 translate ([27.5, 0, 0]) {
                   color ([0, 0, 0, 1]) {
-                    cylinder (h=15, r=0.6, center=true);
+                    cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                   }
                 }
               }
@@ -11877,7 +11877,7 @@ projection (cut = false) {
               translate ([22.8, 72.2, 0]) {
                 translate ([27.5, 0, 0]) {
                   color ([0, 0, 0, 1]) {
-                    cylinder (h=15, r=0.6, center=true);
+                    cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                   }
                 }
               }
@@ -11886,7 +11886,7 @@ projection (cut = false) {
               translate ([57.19, -3.8000000000000003, 0]) {
                 translate ([8.5, -24.89, 0]) {
                   color ([0, 0, 0, 1]) {
-                    cylinder (h=15, r=0.6, center=true);
+                    cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                   }
                 }
               }
@@ -11895,7 +11895,7 @@ projection (cut = false) {
               translate ([-15.39, -2.85, 0]) {
                 translate ([8.5, -24.89, 0]) {
                   color ([0, 0, 0, 1]) {
-                    cylinder (h=15, r=0.6, center=true);
+                    cylinder ($fa=2, $fn=40, $fs=0.1, h=15, r=0.6, center=true);
                   }
                 }
               }

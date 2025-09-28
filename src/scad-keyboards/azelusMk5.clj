@@ -252,15 +252,9 @@
 
 (defn magnet-cutouts [config]
   (let [{{radius :radius
-          poss :positions
-          {fa :fa
-           fn :fn
-           fs :fs} :quality} :magnet} config]
-    (binding [scad-clj.model/*fa* fa
-              scad-clj.model/*fn* fn
-              scad-clj.model/*fs* fs]
-      (mirror-halves (map (partial place-at-finger-position config (cylinder radius 10))
-                          poss)))))
+          poss :positions} :magnet} config] 
+    (mirror-halves (map (partial place-at-finger-position config (cylinder radius 10))
+                        poss))))
 
 (defn plate-layer-upper [config]
   (difference (plate-layer config
@@ -296,33 +290,26 @@
                                          (cube 7.2 5 5)))))
 
 (defn frame-layer [config]
-  (let [{{fa :fa
-          fn :fn
-          fs :fs} :quality} config]
-    ;; produce high quality mesh
-    (binding [scad-clj.model/*fa* fa
-              scad-clj.model/*fn* fn
-              scad-clj.model/*fs* fs]
-      (let [{plate-thickness :plate-thickness
-             strut-poss :strut-positions
-             strut-radius :strut-radius
-             thumb-strut-poss :thumb-strut-positions} config
-            base-outline (base-outline config)
-            cutout-right (apply hull (place-at-key-positions config (single-hole config 0 0)))
-            cutout (hull (mirror-halves cutout-right))
-            cutout-controller (translate [0 65 0] (cube 28 30 5))
-            cutout-switch (translate [18 75 0] (cube 12 8 5))
-            cutout-reset (translate [-18 75 0] (cube 10 8 5))
-            struts-right (concat (map (partial place-at-finger-position config (cylinder strut-radius plate-thickness)) strut-poss)
-                                 (map (partial place-at-thumb-position config (cylinder strut-radius plate-thickness)) thumb-strut-poss))]
-        (difference (union
-                     (mirror-halves (map (partial intersection base-outline) struts-right))
-                     (difference base-outline
-                                 (mirror-halves cutout)
-                                 cutout-controller
-                                 cutout-switch
-                                 cutout-reset))
-                    (screw-holes config))))))
+  (let [{plate-thickness :plate-thickness
+         strut-poss :strut-positions
+         strut-radius :strut-radius
+         thumb-strut-poss :thumb-strut-positions} config
+        base-outline (base-outline config)
+        cutout-right (apply hull (place-at-key-positions config (single-hole config 0 0)))
+        cutout (hull (mirror-halves cutout-right))
+        cutout-controller (translate [0 65 0] (cube 28 30 5))
+        cutout-switch (translate [18 75 0] (cube 12 8 5))
+        cutout-reset (translate [-18 75 0] (cube 10 8 5))
+        struts-right (concat (map (partial place-at-finger-position config (cylinder strut-radius plate-thickness)) strut-poss)
+                             (map (partial place-at-thumb-position config (cylinder strut-radius plate-thickness)) thumb-strut-poss))]
+    (difference (union
+                 (mirror-halves (map (partial intersection base-outline) struts-right))
+                 (difference base-outline
+                             (mirror-halves cutout)
+                             cutout-controller
+                             cutout-switch
+                             cutout-reset))
+                (screw-holes config))))
 
 (defn frame-layer-half [config]
   (let [{{top :max
@@ -388,25 +375,23 @@
               (translate [550 0 0] (mirror [1 0 0] (frame-layer config)))
               )))
 
-(defn create-multi-model []
-  (let [variant (create-model (merge base-config config-variant))
-        base-model (create-model base-config)]
+(defn create-multi-model [config]
+  (let [variant (create-model (merge config config-variant))
+        base-model (create-model config)]
     (union base-model
-           (translate [0 0 0] (all-layers base-config)))))
+           (translate [0 0 0] (all-layers config)))))
 
+(defn run [config]
+  (let [{{fa :fa
+           fn :fn
+           fs :fs} :quality} config]
+    (binding [scad-clj.model/*fa* fa
+              scad-clj.model/*fn* fn
+              scad-clj.model/*fs* fs]
+      (spit "things/mk5/azelusmk5.scad"
+            (write-scad (create-multi-model config)))
+      (spit "things/mk5/all.scad" (write-scad (project (all-layers config))))
+      ;; space-efficient placement for laser cutting
+      (spit "things/mk5/optimized.scad" (write-scad (project (optimized-placement config)))))))
 
-(defn run []
-  (spit "things/mk5/azelusmk5.scad"
-        (write-scad (create-multi-model)))
-  (spit "things/mk5/top.scad" (write-scad (project (top-layer base-config))))
-  (spit "things/mk5/plate-upper.scad" (write-scad (project (plate-layer-upper base-config))))
-  (spit "things/mk5/plate-lower1.scad" (write-scad (project (plate-layer-lower1 base-config))))
-  (spit "things/mk5/plate-lower2.scad" (write-scad (project (plate-layer-lower1 base-config))))
-  (spit "things/mk5/frame.scad" (write-scad (project (frame-layer base-config))))
-  (spit "things/mk5/bottom.scad" (write-scad (project (bottom-layer base-config))))
-  (spit "things/mk5/all.scad" (write-scad (project (all-layers base-config))))
-  ;; space-efficient placement for laser cutting
-  (spit "things/mk5/optimized.scad" (write-scad (project (optimized-placement base-config))))
-  )
-
-(run)
+(run base-config)

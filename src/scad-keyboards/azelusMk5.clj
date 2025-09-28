@@ -4,10 +4,10 @@
 ; eval file
 ; open ./things/mk5/all.scad in openScad
 
-(ns azelusMK5
+(ns azelusMk5
   (:refer-clojure :exclude [use import])
   (:require [scad-clj.scad :refer [write-scad]]
-            [scad-clj.model :refer [translate rotate intersection union hull difference cube color mirror cylinder project]]))
+            [scad-clj.model :refer [translate rotate scale intersection union hull difference cube color mirror cylinder project]]))
 
 (def PI Math/PI)
 
@@ -36,7 +36,7 @@
                   ;; The pair of bottom feet is shifted 6mm to the left. That way the keyboard sits slightly off-center to the left and allows access to the MacBook's touch-id key.
                   ;; Width of the feet must be less than 2mm at the bottom. A trapezoid cross section is ideal so the top can be wider for more glued surface.
                   ;; Height of the feet must be more than 1.5mm
-                  ;; Ideal base material are 10mm x 10mm x 2mm rubber feet, that can then be cut to dimension. This even allows cutting off height to eliminate wobble, in case the keyboard case is slightly bent.
+                  ;; Ideal base material are 10mm x 10mm x 2mm rubber feet, that can then be cut to dimension. This even leaves room for cutting off height to eliminate wobble, in case the keyboard case is slightly bent.
                   :rubber-feet [{:w 10 :d 2 :h 2 :x 112 :y 70}
                                 {:w 10 :d 2 :h 2 :x -112 :y 70}
                                 {:w 2 :d 10 :h 2 :x 67.75 :y -11}
@@ -146,18 +146,6 @@
                                              (* cap-y 0.7)
                                              2)))))))
 
-(defn rubber-feet [config]
-  (let [{feet-config :rubber-feet} config]
-    (map (fn [{x :x
-               y :y
-               w :w
-               d :d
-               h :h}]
-           (translate [x y -2]
-                      (color [0.3 0.3 0.3 1]
-                             (cube w d h))))
-         feet-config)))
-
 (defn mirror-halves [shape]
   (union shape (mirror [1 0 0] shape)))
 
@@ -189,6 +177,25 @@
          (apply hull)
          (mirror-halves)
          (color [0.98 0.92 0.6 1]))))
+
+(defn rubber-feet [config]
+  (let [{feet-config :rubber-feet} config] 
+    (map (fn [{x :x
+               y :y
+               w :w
+               d :d
+               h :h}]
+           (translate [x y 0]
+                      (color [0.3 0.3 0.3 1]
+                             (cube w d h))))
+         feet-config)))
+
+(defn rubber-feet-outline-layer [config]
+  (let [layer-outline (base-outline config)
+        rubber-feet-indicator (->> (rubber-feet config)
+                                   (scale [1 1 10]))]
+    (difference layer-outline rubber-feet-indicator)))
+
 
 (defn screw-holes [config]
   (let [{hole-poss :screwhole-positions
@@ -278,7 +285,7 @@
           fs :fs} :quality} config]
     ;; produce high quality mesh
     (binding [scad-clj.model/*fa* fa
-              scad-clj.model/*fn* fn 
+              scad-clj.model/*fn* fn
               scad-clj.model/*fs* fs]
       (let [{plate-thickness :plate-thickness
              strut-poss :strut-positions
@@ -301,6 +308,18 @@
                                  cutout-reset))
                     (screw-holes config))))))
 
+(defn frame-layer-half [config]
+  (let [{{top :max
+          bottom :min} :plate-mirror-edge } config
+        x-dim 140
+        y-dim (- top bottom) 
+        frame-layer (frame-layer config)]
+    ;; center cube in y, shift to positive x only
+    (intersection (translate [(/ x-dim 2) (/ (+ top bottom) 2) 0]
+                             (cube x-dim y-dim 10))
+                  frame-layer)
+    ))
+
 (defn bottom-layer [config]
   (difference (base-outline config)
               (screw-holes config)))
@@ -308,7 +327,6 @@
 (defn create-model [config]
   (let [{plate-thickness :plate-thickness} config
         keycaps (mirror-halves (place-at-key-positions config (keycap config)))
-        rubber-feet (rubber-feet config)
         explode 1
         layers [keycaps
                 (top-layer config)
@@ -318,14 +336,16 @@
                 (frame-layer config)
                 (frame-layer config)
                 (bottom-layer config)
-                rubber-feet]]
+                (rubber-feet config)]]
     (union
      (->> layers
           (map-indexed #(translate [0 0 (- (* %1 plate-thickness explode))] %2))))))
 
 (defn all-layers [config]
   (union
-   (translate [275 0 0] (rubber-feet config))
+   ;; Helper layer. Don't cut this directly. The idea is to engrave the exact rubber feet positions onto the bottom layer for easier glueing later on.
+   ;; Not intended for cutting holes anywhere, just to provide the tool path for engraving. The layer outline helps align the paths with the bottom layer. 
+   (translate [275 0 0] (rubber-feet-outline-layer config))
    (translate [-275 0 0] (top-layer config))
    (translate [-275 -150 0] (plate-layer-upper config))
    (translate [0 -150 0] (plate-layer-lower1 config))
@@ -335,6 +355,21 @@
    (translate [275 -300 0] (bottom-layer config))
    #_(translate [-220 -210 0] (rotate (* PI 3/2) [0 0 1] (plate-layer-upper config)))
    #_(color [0.5 0.5 0.5] (translate [-100 150 -20] (cube 495 1000 1.5)))))
+
+(defn optimized-placement [config]
+  ;; move to origin
+  (translate [285 145 0]
+             (union
+              (translate [0 0 0] (top-layer config))
+              (translate [275 0 0] (bottom-layer config))
+              (translate [275 140 0] (rubber-feet-outline-layer config))
+              (translate [-137.5 -48 0] (mirror [0 1 0] (plate-layer-upper config)))
+              (translate [137.5 -48 0] (mirror [0 1 0]  (plate-layer-lower1 config)))
+              (translate [412.5 -48 0] (mirror [0 1 0]  (plate-layer-lower2 config)))
+              (translate [687.5 -48 0] (mirror [0 1 0] (mirror [1 0 0] (frame-layer-half config))))
+              (translate [-275 0 0] (frame-layer-half config))
+              (translate [550 0 0] (mirror [1 0 0] (frame-layer config)))
+              )))
 
 (defn create-multi-model []
   (let [variant (create-model (merge base-config config-variant))
@@ -352,6 +387,9 @@
   (spit "things/mk5/plate-lower2.scad" (write-scad (project (plate-layer-lower1 base-config))))
   (spit "things/mk5/frame.scad" (write-scad (project (frame-layer base-config))))
   (spit "things/mk5/bottom.scad" (write-scad (project (bottom-layer base-config))))
-  (spit "things/mk5/all.scad" (write-scad (project (all-layers base-config)))))
+  (spit "things/mk5/all.scad" (write-scad (project (all-layers base-config))))
+  ;; space-efficient placement for laser cutting
+  (spit "things/mk5/optimized.scad" (write-scad (project (optimized-placement base-config))))
+  )
 
 (run)

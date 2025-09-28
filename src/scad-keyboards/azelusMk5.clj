@@ -51,6 +51,8 @@
                   :thumb-screwhole-positions [[3.01 -0.2] [-0.81 -0.15]]
                   :thumb-strut-positions [[3.01 -0.2] [-0.81 -0.15]]
                   :strut-radius 5
+                  :magnet{:positions [[3.95 2.5] [3.1 -1.02]]
+                          :radius 3}
 
                   :battery-cutout-positions [[-0.9 -0.35] [-0.9 1.8]]
 
@@ -248,10 +250,23 @@
     (union (pcb-cutout contr-w contr-d)
            (usb-c-cutout contr-w contr-d))))
 
+(defn magnet-cutouts [config]
+  (let [{{radius :radius
+          poss :positions
+          {fa :fa
+           fn :fn
+           fs :fs} :quality} :magnet} config]
+    (binding [scad-clj.model/*fa* fa
+              scad-clj.model/*fn* fn
+              scad-clj.model/*fs* fs]
+      (mirror-halves (map (partial place-at-finger-position config (cylinder radius 10))
+                          poss)))))
+
 (defn plate-layer-upper [config]
-  (plate-layer config
-               (single-hole config 0 0)
-               (controller-cutout config)))
+  (difference (plate-layer config
+                           (single-hole config 0 0)
+                           (controller-cutout config))
+              (magnet-cutouts config)))
 
 (defn plate-layer-lower [config additional-cutout]
   (let [{{contr-w :w
@@ -267,8 +282,9 @@
 
 (defn plate-layer-lower1 [config]
   (let [{{contr-d :d} :controller} config]
-    (plate-layer-lower config (translate [20 (/ contr-d 2) 0]
-                                         (cube 7.2 10 5)))))
+    (difference (plate-layer-lower config (translate [20 (/ contr-d 2) 0]
+                                                     (cube 7.2 10 5)))
+                (magnet-cutouts config))))
 
 (defn plate-layer-lower2 [config]
   (let [{{contr-d :d} :controller
@@ -363,6 +379,7 @@
               (translate [0 0 0] (top-layer config))
               (translate [275 0 0] (bottom-layer config))
               (translate [275 140 0] (rubber-feet-outline-layer config))
+
               (translate [-137.5 -48 0] (mirror [0 1 0] (plate-layer-upper config)))
               (translate [137.5 -48 0] (mirror [0 1 0]  (plate-layer-lower1 config)))
               (translate [412.5 -48 0] (mirror [0 1 0]  (plate-layer-lower2 config)))

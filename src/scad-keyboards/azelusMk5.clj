@@ -15,8 +15,7 @@
   (* (/ degrees 180) PI))
 
 ;; TODOs
-;; * Battery Hatch (top layer)
-;; * Lid construction: nut and magnet placement
+;;   Finalize Design
 
 (def base-config {:quality {:fa 2
                             :fn 40  ;; low 10, medium 30, high 50
@@ -68,10 +67,10 @@
                   :thumb-offset-units [-1 -1.31]
                   :thumb-staggers [0 0 0 13]})
 
-(def config-variant {:plate-mirror-edge {:min -29 :max 95 :top-width 30}
-
-                     :col-staggers [8 12 20 15 3 -1]
-                     :additional-grid-positions #{[1 3] [5 3]}})
+(def config-variant {:plate-mirror-edge {:min -38 :max 84 :top-width 50}
+                     :mirror-offset [32.5 0]
+                     :thumb-offset-units [-1 -1.31]
+                     :thumb-staggers [0 0 0 13]})
 
 (let [{{key-dist :y} :key-distance
        [_ y-offset] :thumb-offset-units
@@ -361,25 +360,32 @@
 
 (defn optimized-placement [config]
   ;; move to origin
-  (translate [285 145 0]
-             (union
-              (translate [0 0 0] (top-layer config))
-              (translate [275 0 0] (bottom-layer config))
-              (translate [275 140 0] (rubber-feet-outline-layer config))
+  (let [{[x-offset _] :mirror-offset} config
+        width (* 2 (+ 110 x-offset))]
+    (translate [285 145 0]
+               (union
+                (translate [width 140 0] (rubber-feet-outline-layer config))
 
-              (translate [-137.5 -48 0] (mirror [0 1 0] (plate-layer-upper config)))
-              (translate [137.5 -48 0] (mirror [0 1 0]  (plate-layer-lower1 config)))
-              (translate [412.5 -48 0] (mirror [0 1 0]  (plate-layer-lower2 config)))
-              (translate [687.5 -48 0] (mirror [0 1 0] (mirror [1 0 0] (frame-layer-half config))))
-              (translate [-275 0 0] (frame-layer-half config))
-              (translate [550 0 0] (mirror [1 0 0] (frame-layer config)))
-              )))
+                (translate [(* -1 width)  0] (frame-layer-half config))
+                (translate [(* 0 width) 0 0] (top-layer config))
+                (translate [(* 1 width) 0 0] (bottom-layer config))
+                (translate [(* 2 width) 0 0] (mirror [1 0 0] (frame-layer config)))
+
+                (translate [(* 0.5 width) -52 0]
+                           (translate [(* -1 width) 0 0] (mirror [0 1 0] (plate-layer-upper config)))
+                           (translate [(* 0 width)  0 0] (mirror [0 1 0]  (plate-layer-lower1 config)))
+                           (translate [(* 1 width) 0 0] (mirror [0 1 0]  (plate-layer-lower2 config)))
+                           (translate [(* 2 width) 0 0] (mirror [0 1 0] (mirror [1 0 0] (frame-layer-half config)))))
+                ))))
 
 (defn create-multi-model [config]
-  (let [variant (create-model (merge config config-variant))
+  (let [variant-config (merge config config-variant)
+        variant (create-model variant-config)
         base-model (create-model config)]
-    (union base-model
-           (translate [0 0 0] (all-layers config)))))
+    (union #_base-model
+           (translate [-160 150 0] variant)
+           #_(translate [0 0 0] (all-layers variant-config))
+           (optimized-placement variant-config))))
 
 (defn run [config]
   (let [{{fa :fa

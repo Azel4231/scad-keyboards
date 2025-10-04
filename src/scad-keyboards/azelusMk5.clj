@@ -32,10 +32,10 @@
                   :mirror-offset [27.5 0]
                   :keycap-dimensions {:x 18 :y 18 :z 10}
                   ;; Rubber feet dimensions that match the MacBook Pro keyboard (ISO-DE):
-                  ;; The top feet are aligned horizontally and positioned in the gap between F-keys and number-row (thus x-distance between them can be arbitrary but less than 270mm).
-                  ;; The bottom feet are aligned vertically and positioned in the the gap between option+command (left) and command+option (right), x-distance = 141.5 mm.
-                  ;; y-distance between top and bottom feet (centers): min 78, max 87 (due to location of the respective gaps (min = 73 max 92) and the depth of the bottom feet (10mm)). 
-                  ;; The pair of bottom feet is shifted 6mm to the left. That way the keyboard sits slightly off-center to the left and allows access to the MacBook's touch-id key.
+                  ;; The top feet are aligned horizontally and located in the gap between F-keys and number-row (thus x-distance between them can be arbitrary but less than 270mm).
+                  ;; The bottom feet are oriented vertically and located in the the gaps between option+command (left) and command+option (right), x-distance = 141.5 mm.
+                  ;; y-distance between top and bottom feet (centers): min 78, max 87 (due to location of the respective gaps (min = 73 max 92) and the length of the bottom feet (10mm)). 
+                  ;; The pair of bottom feet is shifted 6mm to the left (of the keyboard's axis of symmetry). That way the keyboard sits slightly off-center to the left and allows access to the MacBook's touch-id key.
                   ;; Width of the feet must be less than 2mm at the bottom. A trapezoid cross section is ideal so the top can be wider for more glued surface.
                   ;; Height of the feet must be more than 1.5mm
                   ;; Ideal base material are 10mm x 10mm x 2mm rubber feet, that can then be cut to dimension. This even leaves room for cutting off height to eliminate wobble, in case the keyboard case is slightly bent.
@@ -48,15 +48,15 @@
                   :controller-top-wall 2
 
                   :screwhole-radius 0.6
-                  :screwhole-positions [[4.8 2.25] [4.5 -1.05] [1.2 3.8]]
+                  :screwhole-positions [[4.99 2.25] [4.5 -1.05] [0.98 3.75]]
                   :strut-positions [[4.8 2.75 ] [4.5 -1.05]]
-                  :thumb-screwhole-positions [[3.01 -0.2] [-0.81 -0.15]]
-                  :thumb-strut-positions [[3.01 -0.2] [-0.81 -0.15]]
+                  :thumb-screwhole-positions [[3.01 -0.2] [-0.88 -0.28]]
+                  :thumb-strut-positions [[3.01 -0.2] [-0.88 -0.23]]
                   :strut-radius 5
                   :magnet{:positions [[3.95 2.5] [3.1 -1.22]]
                           :radius 3}
 
-                  :battery-cutout-positions [[-0.9 -0.35] [-0.9 1.8]]
+                  :battery-cutout-positions [[-0.91 -0.35] [-0.91 1.8]]
 
                   :row-number 3
                   :col-number 6
@@ -70,9 +70,9 @@
                   :thumb-offset-units [-1 -1.42]
                   :thumb-staggers [0 0 0 14]})
 
-(def config-variant {
+(def config-variant {})
 
-                     })
+                     
 
 (let [{{key-dist :y} :key-distance
        [_ y-offset] :thumb-offset-units
@@ -233,7 +233,7 @@
         base-outline (base-outline config)
         cutouts (mirror-halves (place-at-key-positions config cutout-switch))
         cutout-battery (hull (mirror-halves
-                              (map (partial place-at-finger-position config (single-hole config -2 0))
+                              (map (partial place-at-finger-position config (single-hole config -6 0))
                                    battery-cutout-poss)))]
     (union (difference base-outline
                        cutouts
@@ -260,10 +260,11 @@
                         poss))))
 
 (defn plate-layer-upper [config]
-  (difference (plate-layer config
-                           (single-hole config 0 0)
-                           (controller-cutout config))
-              (magnet-cutouts config)))
+  (union (translate [0 5 0](cube 17.5 31 4.3))
+         (difference (plate-layer config
+                                  (single-hole config 0 0)
+                                  (controller-cutout config))
+                     (magnet-cutouts config))))
 
 (defn plate-layer-lower [config additional-cutout]
   (let [{{contr-w :w
@@ -323,8 +324,8 @@
     ;; center cube in y, shift to positive x only
     (intersection (translate [(/ x-dim 2) (/ (+ top bottom) 2) 0]
                              (cube x-dim y-dim 10))
-                  frame-layer)
-    ))
+                  frame-layer)))
+    
 
 (defn bottom-layer [config]
   (difference (base-outline config)
@@ -345,7 +346,9 @@
                 (rubber-feet config)]]
     (union
      (->> layers
-          (map-indexed #(translate [0 0 (- (* %1 plate-thickness explode))] %2))))))
+          (map-indexed (fn [idx layer] 
+                         (translate [0 0 (- (* idx plate-thickness explode))] 
+                                    layer)))))))
 
 (defn all-layers [config]
   (union
@@ -379,8 +382,8 @@
                            (translate [(* -1 width) 0 0] (mirror [0 1 0] (plate-layer-upper config)))
                            (translate [(* 0 width)  0 0] (mirror [0 1 0]  (plate-layer-lower1 config)))
                            (translate [(* 1 width) 0 0] (mirror [0 1 0]  (plate-layer-lower2 config)))
-                           (translate [(* 2 width) 0 0] (mirror [0 1 0] (mirror [1 0 0] (frame-layer-half config)))))
-                ))))
+                           (translate [(* 2 width) 0 0] (mirror [0 1 0] (mirror [1 0 0] (frame-layer-half config)))))))))
+                
 
 (defn create-multi-model [config]
   (let [variant-config (merge config config-variant)
@@ -388,8 +391,8 @@
         base-model (create-model config)]
     (union base-model
      (translate [0 150 0] variant)
-           (translate [0 0 0] (all-layers variant-config))
-           )))
+     (translate [0 0 0] (all-layers variant-config)))))
+           
 
 (defn run [config]
   (let [{{fa :fa

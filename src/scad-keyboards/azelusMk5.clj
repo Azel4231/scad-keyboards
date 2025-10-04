@@ -15,7 +15,10 @@
   (* (/ degrees 180) PI))
 
 ;; TODOs
-;;   Finalize Design
+;;   Varianten probieren: 
+;;      schmal braucht für Nice!Nano mehr Höhe
+;;      breit ist grenzwertig breit für Lasern
+;;   
 
 (def base-config {:quality {:fa 2
                             :fn 40  ;; low 10, medium 30, high 50
@@ -40,7 +43,7 @@
                                 {:w 10 :d 2 :h 2 :x -112 :y 70}
                                 {:w 2 :d 10 :h 2 :x 67.75 :y -11}
                                 {:w 2 :d 10 :h 2 :x -73.75 :y -10}]
-                  :plate-mirror-edge {:min -38 :max 88 :top-width 50}
+                  :plate-mirror-edge {:min -40.2 :max 87 :top-width 26}
                   :controller {:w 18 :d 33.5 :h 1.5}
                   :controller-top-wall 2
 
@@ -50,37 +53,38 @@
                   :thumb-screwhole-positions [[3.01 -0.2] [-0.81 -0.15]]
                   :thumb-strut-positions [[3.01 -0.2] [-0.81 -0.15]]
                   :strut-radius 5
-                  :magnet{:positions [[3.95 2.5] [3.1 -1.02]]
+                  :magnet{:positions [[3.95 2.5] [3.1 -1.22]]
                           :radius 3}
 
                   :battery-cutout-positions [[-0.9 -0.35] [-0.9 1.8]]
 
                   :row-number 3
                   :col-number 6
-                  :col-staggers [0 2 10 5 -5 -8]
+                  :col-staggers [-1 2 10 5 -5 -8]
                   :excluded-grid-positions #{}
                   :additional-grid-positions #{[1 3]}
 
                   :thumb-row-number 1
                   :thumb-col-number 4
                   ;; multiples of key-distance
-                  :thumb-offset-units [-1 -1.31]
-                  :thumb-staggers [0 0 0 13]})
+                  :thumb-offset-units [-1 -1.42]
+                  :thumb-staggers [0 0 0 14]})
 
-(def config-variant {:plate-mirror-edge {:min -38 :max 84 :top-width 50}
-                     :mirror-offset [32.5 0]
-                     :thumb-offset-units [-1 -1.31]
-                     :thumb-staggers [0 0 0 13]})
+(def config-variant {
+
+                     })
 
 (let [{{key-dist :y} :key-distance
        [_ y-offset] :thumb-offset-units
-       [_ _ _ thumb-stagger] :thumb-staggers
-       [_ _ col-stagger _ _ _] :col-staggers} base-config]
-  (prn "key-dist=" key-dist ", y-offset=" y-offset ", thumb-stagger=" thumb-stagger ", col-stagger=" col-stagger)
-  (prn "Distance from middle finger bottom key to forth thumb key: " (+ thumb-stagger
-                                                                        (* key-dist y-offset)
-                                                                        key-dist
-                                                                        (- col-stagger))))
+       [th-stagger-inner _ _ th-stagger-outer] :thumb-staggers
+       [col-stagger-1st _ col-stagger-middle _ _ _] :col-staggers} base-config]
+  (prn "key-dist=" key-dist ", y-offset=" y-offset ", thumb-stagger=" th-stagger-outer ", col-stagger-outer=" col-stagger-middle)
+  (prn "4th thumb key: Distance from middle finger bottom key to forth thumb key: " (+ th-stagger-outer
+                                                                                       (* key-dist y-offset)
+                                                                                       (- col-stagger-middle)))
+  (prn "Thumb cluster: Distance innermost column:" (+ th-stagger-inner
+                                                      (* key-dist y-offset)
+                                                      (- col-stagger-1st))))
 
 (defn place-shape [config shape [offset-x offset-y] staggers [row col]]
   (let [{{dist-x :x
@@ -382,10 +386,10 @@
   (let [variant-config (merge config config-variant)
         variant (create-model variant-config)
         base-model (create-model config)]
-    (union #_base-model
-           (translate [-160 150 0] variant)
-           #_(translate [0 0 0] (all-layers variant-config))
-           (optimized-placement variant-config))))
+    (union base-model
+     (translate [0 150 0] variant)
+           (translate [0 0 0] (all-layers variant-config))
+           )))
 
 (defn run [config]
   (let [{{fa :fa

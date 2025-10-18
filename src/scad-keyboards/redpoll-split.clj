@@ -49,15 +49,15 @@
               
               
               :matrix {:offset [38 12]
-                       :clusters [{:rows 3
+                       :clusters [{:rows 3 ;; finger cluster
                                    :cols 6
-                                   :staggers [[0 5] [0 7] [0 15] [0 11] [0 1] [0 0]]
-                                   :offset [0 0]
-                                   :additional-positions [[1 3]]}  ;; fingers
-                                  {:rows 1 
+                                   :staggers [[0 0] [0 2] [0 10] [0 6] [0 -4] [0 -5]] ;; mm
+                                   :offset-units [0 5/19]
+                                   :additional-positions [[1 3]]} 
+                                  {:rows 1 ;; thumb cluster
                                    :cols 4
-                                   :offset [-19 -19] ;; -1u in both x and y direction
-                                   :staggers [[0 0] [0 0] [0 0] [0 4]]}  ;; thumbs
+                                   :offset-units [-1 -1]
+                                   :staggers [[0 0] [0 0] [0 0] [0 4]]}  ;; mm
                                   ]
                        }
               }

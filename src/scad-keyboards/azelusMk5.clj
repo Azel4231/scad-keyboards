@@ -7,7 +7,7 @@
  (ns azelusMk5
    (:refer-clojure :exclude [use import])
    (:require [scad-clj.scad :refer [write-scad]]
-             [scad-clj.model :refer [translate rotate scale intersection union hull difference cube color mirror cylinder project]]))
+             [scad-clj.model :refer [translate rotate scale intersection union hull difference cube color mirror cylinder project minkowski]]))
 
  (def PI Math/PI)
 
@@ -50,7 +50,7 @@
                                                       [2 10] [2 10]]
                                          :offset [0 0]
                                          :angle 0}
-                   :plate-mirror-edge {:min -40.2 :max 87 :top-width 26}
+                   :plate-mirror-edge {:min -40.7 :max 84.5 :top-width 26}
                    :controller {:w 18 :d 33.5 :h 1.5}
                    :controller-top-wall 2
 
@@ -61,8 +61,8 @@
                              :magnet-radius 2.95}
                    :battery-cutout {:rows 3
                                     :cols 1
-                                    :offset [-19 2]
-                                    :dimensions [14 18]}
+                                    :offset [-19.5 1.5]
+                                    :dimensions [14 15]}
 
                    :matrix {:offset [25 -8]
                             :clusters {:finger-cluster {:rows 3
@@ -164,6 +164,10 @@
  (defn average [& vals]
    (/ (reduce + vals) (count vals)))
 
+ (defn minkowski2 "helper swapping the arguments for minkowski"
+   [shape outline]
+   (minkowski outline shape))
+
  (defn base-outline [config]
    (let [{plate-thickness :plate-thickness
           plate-border :plate-border
@@ -187,6 +191,7 @@
           (cons mirror-edge-helper)
           (cons mirror-top-helper)
           (apply hull)
+          #_(minkowski2 (cylinder plate-border 0.01))
           (mirror-halves)
           (color [0.98 0.92 0.6 1]))))
 
@@ -255,32 +260,40 @@
                              (controller-cutout config))
                 (magnet-cutouts config))))
 
- (defn plate-layer-lower [config additional-cutout]
+ (defn plate-layer-lower1 [config]
    (let [{{contr-w :w
            contr-d :d} :controller} config
+         power-switch-cutout (translate [18
+                                         (- (/ contr-d 2)
+                                            0)
+                                         0]
+                                        (cube 7.2 10 5))
          cutout-controller (hull (cube contr-w contr-d 5)
-                                 (cube (+ contr-w 10) (- contr-d 6) 5))
+                                 (cube (+ contr-w 5) (- contr-d 6) 5))
          cutout-usb-c (usb-c-cutout contr-w contr-d)]
-     (plate-layer config
-                  (single-key-hole config 0 1.2)
-                  (union cutout-controller
-                         cutout-usb-c
-                         additional-cutout))))
-
- (defn plate-layer-lower1 [config]
-   (let [{{contr-d :d} :controller} config]
-     (difference (plate-layer-lower config (translate [20 (/ contr-d 2) 0]
-                                                      (cube 7.2 10 5)))
+     (difference (plate-layer config
+                              (single-key-hole config 0 1.2)
+                              (union power-switch-cutout
+                                     cutout-controller
+                                     cutout-usb-c))
                  (magnet-cutouts config))))
 
  (defn plate-layer-lower2 [config]
-   (let [{{contr-d :d} :controller
-          controller-wall :controller-top-wall} config]
-     (plate-layer-lower config (translate [20
-                                           (- (/ contr-d 2)
-                                              (* 2 controller-wall))
-                                           0]
-                                          (cube 7.2 5 5)))))
+   (let [{{contr-w :w
+           contr-d :d} :controller
+          controller-wall :controller-top-wall} config
+         power-switch-cutout (translate [18
+                                         (- (/ contr-d 2)
+                                            (* 2 controller-wall)
+                                            0)
+                                         0]
+                                        (cube 7.2 5 5))
+         cutout-controller (hull (cube contr-w (- contr-d 2) 5)
+                                 (cube (+ contr-w 5) (- contr-d 6) 5))]
+     (plate-layer config
+                  (single-key-hole config 0 0.9)
+                  (union power-switch-cutout
+                         cutout-controller))))
 
 
  (defn frame-layer-internal [config]
@@ -356,13 +369,13 @@
          keycaps (mirror-halves (place-at-key-positions config (keycap config)))
          explode 1
          layers [#_keycaps
-                 #_(top-layer config)
+                 (top-layer config)
                  (plate-layer-upper config)
                  (plate-layer-lower1 config)
                  (plate-layer-lower2 config)
                  (frame-layer config)
                  (frame-layer config)
-                 #_(bottom-layer config)
+                 (bottom-layer config)
                  (rubber-feet config)]]
      (union
       (->> layers
@@ -376,8 +389,8 @@
     #_(translate [275 0 0] (rubber-feet-outline-layer config))
     (translate [-275 0 0] (top-layer config))
     (translate [-275 -150 0] (plate-layer-upper config))
-    #_(translate [0 -150 0] (plate-layer-lower1 config))
-    #_(translate [275 -150 0] (plate-layer-lower2 config))
+    (translate [0 -150 0] (plate-layer-lower1 config))
+    (translate [275 -150 0] (plate-layer-lower2 config))
     #_(translate [-275 -300 0] (frame-layer config))
     #_(translate [0 -300 0] (frame-layer config))
     #_(translate [275 -300 0] (bottom-layer config))

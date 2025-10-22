@@ -1,4 +1,27 @@
 union () {
+  color ([0.3, 0.3, 0.6, 1]) {
+    translate ([71.25, 122.5, -5]) {
+      cube ([141.5, 245, 1], center=true);
+    }
+    translate ([213.75, 122.5, -5]) {
+      cube ([141.5, 245, 1], center=true);
+    }
+    translate ([356.25, 122.5, -5]) {
+      cube ([141.5, 245, 1], center=true);
+    }
+    translate ([498.75, 122.5, -5]) {
+      cube ([141.5, 245, 1], center=true);
+    }
+    translate ([641.25, 122.5, -5]) {
+      cube ([141.5, 245, 1], center=true);
+    }
+    translate ([783.75, 122.5, -5]) {
+      cube ([141.5, 245, 1], center=true);
+    }
+    translate ([926.25, 122.5, -5]) {
+      cube ([141.5, 245, 1], center=true);
+    }
+  }
   translate ([285.0, 310, 0]) {
     mirror ([1, 0, 0]) {
       difference () {
@@ -664,11 +687,13 @@ union () {
                       cylinder ($fa=2, $fn=40, $fs=0.1, h=1.5, r=5, center=true);
                     }
                   }
-                  translate ([0, 65, 0]) {
-                    cube ([28, 30, 5], center=true);
-                  }
-                  translate ([18, 75, 0]) {
-                    cube ([12, 8, 5], center=true);
+                  translate ([0, 65.75, 0]) {
+                    union () {
+                      cube ([18, 33.5, 5], center=true);
+                      translate ([0, 1, 0]) {
+                        cube ([9, 32.5, 5], center=true);
+                      }
+                    }
                   }
                   rotate (a=14.0, v=[0, 0, 1]) {
                     translate ([25.0, -3.0, 0]) {
@@ -825,11 +850,13 @@ union () {
                         cylinder ($fa=2, $fn=40, $fs=0.1, h=1.5, r=5, center=true);
                       }
                     }
-                    translate ([0, 65, 0]) {
-                      cube ([28, 30, 5], center=true);
-                    }
-                    translate ([18, 75, 0]) {
-                      cube ([12, 8, 5], center=true);
+                    translate ([0, 65.75, 0]) {
+                      union () {
+                        cube ([18, 33.5, 5], center=true);
+                        translate ([0, 1, 0]) {
+                          cube ([9, 32.5, 5], center=true);
+                        }
+                      }
                     }
                     rotate (a=14.0, v=[0, 0, 1]) {
                       translate ([25.0, -3.0, 0]) {
@@ -963,7 +990,7 @@ union () {
       }
     }
   }
-  translate ([285.0, 41.18000000000001, 0]) {
+  translate ([285.0, 43.18000000000001, 0]) {
     union () {
       translate ([-280.0, 0, 0]) {
         intersection () {
@@ -9608,7 +9635,7 @@ union () {
           }
         }
       }
-      translate ([142.5, 112.18, 0]) {
+      translate ([142.5, 113.18, 0]) {
         translate ([-285.0, 0, 0]) {
           union () {
             difference () {
@@ -11356,122 +11383,122 @@ union () {
                     union () {
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([25.0, -3.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([25.0, 16.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([25.0, 35.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([44.0, -1.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([44.0, 18.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([44.0, 37.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([63.0, 7.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([63.0, 26.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([63.0, 45.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([82.0, 3.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([82.0, 22.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([82.0, 41.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([101.0, -7.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([101.0, 12.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([101.0, 31.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([120.0, -9.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([120.0, 10.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([120.0, 29.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([44.0, 56.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([6.0, -27.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([25.0, -27.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([44.0, -27.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([63.0, -13.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([82.0, -17.0, 0]) {
-                          cube ([12.88, 12.8, 10], center=true);
+                          cube ([13.38, 13.3, 10], center=true);
                         }
                       }
                     }
@@ -11484,122 +11511,122 @@ union () {
                       union () {
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([25.0, -3.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([25.0, 16.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([25.0, 35.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([44.0, -1.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([44.0, 18.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([44.0, 37.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([63.0, 7.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([63.0, 26.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([63.0, 45.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([82.0, 3.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([82.0, 22.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([82.0, 41.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([101.0, -7.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([101.0, 12.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([101.0, 31.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([120.0, -9.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([120.0, 10.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([120.0, 29.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([44.0, 56.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([6.0, -27.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([25.0, -27.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([44.0, -27.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([63.0, -13.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([82.0, -17.0, 0]) {
-                            cube ([12.88, 12.8, 10], center=true);
+                            cube ([13.38, 13.3, 10], center=true);
                           }
                         }
                       }

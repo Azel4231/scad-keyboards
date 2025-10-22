@@ -90,7 +90,7 @@
  (defn single-key-hole [config x-kerf y-kerf]
    (let [{{cutout-width :x
            cutout-height :y} :cutout-dimensions} config]
-     (cube (+ cutout-width x-kerf) (+ cutout-height y-kerf) 25)))
+     (cube (+ cutout-width x-kerf) (+ cutout-height y-kerf) 10)))
 
  (defn place-in-cluster-single "Place shape at a single cluster position"
    [config shape stagger pos]
@@ -358,11 +358,24 @@
 
  ;; for sound dampening
  (defn foam-layer [config]
-   (let [outline (base-outline config)
-         frame (scale [1.05 1.05 5]
-                      (frame-layer-internal config))]
-     (difference outline frame)
-     frame))
+   (let [{plate-thickness :plate-thickness
+          screwhole-cluster :screwholes} config
+         {strut-radius :strut-radius} screwhole-cluster
+         cutout-switches (place-at-key-positions config (single-key-hole config -2 -2))
+         foam (hull (mirror-halves (place-at-key-positions config (single-key-hole config 0 0))))
+         cutout-controller (translate [0 65 0] (cube 28 30 5))
+         cutout-power (translate [18 75 0] (cube 12 8 5))
+         struts-right (place-in-cluster config
+                                        (cylinder strut-radius plate-thickness)
+                                        screwhole-cluster)]
+     (difference
+      foam
+      (scale [1 1 10] (mirror-halves (union
+                                      struts-right
+                                      cutout-controller
+                                      cutout-power
+                                      cutout-switches))))))
+
 
  (defn create-model [config]
    (let [{plate-thickness :plate-thickness} config
@@ -403,14 +416,14 @@
           {top :max
            bottom :min} :plate-mirror-edge} config
          x-dist (* 2 (+ 115 x-offset))
-         y-dist (- top bottom 14)]
+         y-dist (- top bottom 13)]
      (union
       ;; wood outline
       (color [0.3 0.3 0.6 1] (map (fn [n] (translate [(* (/ x-dist 2) (+ n 0.5)) 122.5 -5]
                                                      (cube (dec (/ x-dist 2)) 245 1)))
                                   (range 7)))
-      (translate [(* 2 x-dist) 350 0] (mirror [1 0 0] (rubber-feet-outline-layer config)))
-      #_(translate [(* 4 x-dist) 350 0] (mirror [1 0 0] (foam-layer config)))
+      (translate [(* 1 x-dist) 310 0] (mirror [1 0 0] (rubber-feet-outline-layer config)))
+      (translate [(* 2 x-dist) 310 0] (mirror [1 0 0] (foam-layer config)))
       ;; layers
       (translate [x-dist  (- y-dist 71) 0]
                  (union

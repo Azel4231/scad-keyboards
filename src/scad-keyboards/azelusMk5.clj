@@ -50,14 +50,14 @@
                                                       [2 10] [2 10]]
                                          :offset [0 0]
                                          :angle 0}
-                   :plate-mirror-edge {:min -40.7 :max 84.5 :top-width 26}
+                   :plate-mirror-edge {:min -40.68 :max 84.5 :top-width 26}
                    :controller {:w 18 :d 33.5 :h 1.5}
                    :controller-top-wall 2
 
-                   :screwholes {:additional-positions [[4.8 2.6] [4.5 -0.7] [1.7 -1.4] [1 4.1] [-1.75 -1.3]]
+                   :screwholes {:additional-positions [[4.8 2.6] [5 -0.65] [1.7 -1.4] [1 4.1] [-1.75 -1.3]]
                                 :screwhole-radius 0.6
                                 :strut-radius 5}
-                   :magnets {:additional-positions [[3.95 2.75] [3.99 -0.7]]
+                   :magnets {:additional-positions [[4 2.8] [4 -0.7]]
                              :magnet-radius 2.95}
                    :battery-cutout {:rows 3
                                     :cols 1
@@ -291,7 +291,7 @@
          cutout-controller (hull (cube contr-w (- contr-d 2) 5)
                                  (cube (+ contr-w 5) (- contr-d 6) 5))]
      (plate-layer config
-                  (single-key-hole config 0 0.9)
+                  (single-key-hole config -1 -1)
                   (union power-switch-cutout
                          cutout-controller))))
 
@@ -351,17 +351,23 @@
           feet-config)))
 
  (defn rubber-feet-outline-layer [config]
-   (let [layer-outline (base-outline config)
+   (let [{screwhole-cluster :screwholes} config
+         layer-outline (base-outline config)
          rubber-feet-indicator (->> (rubber-feet config)
-                                    (scale [1 1 10]))]
-     (difference layer-outline rubber-feet-indicator)))
+                                    (scale [1 1 10]))
+         screw-indicator (mirror-halves (place-in-cluster config
+                                                          (cylinder 2 10)
+                                                          screwhole-cluster))]
+     (difference layer-outline 
+                 rubber-feet-indicator
+                 screw-indicator)))
 
  ;; for sound dampening
  (defn foam-layer [config]
    (let [{plate-thickness :plate-thickness
           screwhole-cluster :screwholes} config
          {strut-radius :strut-radius} screwhole-cluster
-         cutout-switches (place-at-key-positions config (single-key-hole config -2 -2))
+         cutout-switches (place-at-key-positions config (single-key-hole config -4 -4))
          foam (hull (mirror-halves (place-at-key-positions config (single-key-hole config 0 0))))
          cutout-controller (translate [0 65 0] (cube 28 30 5))
          cutout-power (translate [18 75 0] (cube 12 8 5))
@@ -408,7 +414,7 @@
     #_(translate [0 -300 0] (frame-layer config))
     #_(translate [275 -300 0] (bottom-layer config))
     #_(translate [-220 -210 0] (rotate (* PI 3/2) [0 0 1] (plate-layer-upper config)))
-    #_(color [0.5 0.5 0.5] (translate [-100 150 -20] (cube 495 1000 1.5)))))
+    ))
 
  (defn optimized-placement [config]
    ;; move to origin
@@ -419,7 +425,7 @@
          y-dist (- top bottom 13)]
      (union
       ;; wood outline
-      (color [0.3 0.3 0.6 1] (map (fn [n] (translate [(* (/ x-dist 2) (+ n 0.5)) 122.5 -5]
+      #_(color [0.3 0.3 0.6 1] (map (fn [n] (translate [(* (/ x-dist 2) (+ n 0.5)) 122.5 -5]
                                                      (cube (dec (/ x-dist 2)) 245 1)))
                                   (range 7)))
       (translate [(* 1 x-dist) 310 0] (mirror [1 0 0] (rubber-feet-outline-layer config)))
@@ -458,7 +464,6 @@
      (binding [scad-clj.model/*fa* fa
                scad-clj.model/*fn* fn
                scad-clj.model/*fs* fs]
-       (spit "things/mk5/foam.scad" (write-scad (foam-layer config)))
        (spit "things/mk5/azelusmk5.scad"
              (write-scad (create-multi-model config)))
        (spit "things/mk5/all.scad" (write-scad (project (all-layers config))))

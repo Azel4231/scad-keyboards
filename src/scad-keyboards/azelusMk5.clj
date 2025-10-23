@@ -14,25 +14,19 @@
 (defn deg2rad [degrees]
   (* (/ degrees 180) PI))
 
-;; TODOs
-;;   Varianten probieren: 
-;;      schmal braucht für Nice!Nano mehr Höhe
-;;      breit ist grenzwertig breit für Lasern
-;;   
-
 (def base-config {:quality {:fa 2
                             :fn 40  ;; low 10, medium 30, high 50
                             :fs 0.1}
                   :opening-angle (deg2rad 14)
-                  ;; normally x and y 13.98
-                  :cutout-dimensions {:x 13.88 :y 13.8}
+                  ;; usually 13.98 (wood only: 13.95, wood with varnish: 13.98)
+                  :cutout-dimensions {:x 13.98 :y 13.98}
                   :key-distance {:x 19.0 :y 19.0}
                   :keycap-kerf 0.75
                   :plate-thickness 1.5
                   :plate-border 3.5
                   :mirror-offset [27.5 0]
                   :keycap-dimensions {:x 18 :y 18 :z 10}
-                  :plate-mirror-edge {:min -40.68 :max 84.5 :top-width 26}
+                  :top {:y 85 :width 26}
 
                   ;; Rubber feet dimensions that match the MacBook Pro keyboard (ISO-DE):
                   ;; The top feet are aligned horizontally and located in the gap between F-keys and number-row (thus x-distance between them can be arbitrary but less than 270mm).
@@ -53,18 +47,20 @@
                                         :offset [0 0]
                                         :angle 0}
 
-                  :controller {:w 18 :d 33.5 :h 1.5}
-                  :controller-top-wall 2
+                  :controller {:w 18 :d 33.5 :h 1.5 :top-wall 3}
 
                   :screwholes {:additional-positions [[4.8 2.6] [5 -0.65] [1.7 -1.4] [1 4.1] [-1.75 -1.3]]
                                :screwhole-radius 0.6
                                :strut-radius 5}
                   :magnets {:additional-positions [[4 2.8] [4 -0.7]]
-                            :magnet-radius 2.95}
+                            :magnet-radius 3}
                   :battery-cutout {:rows 3
                                    :cols 1
                                    :offset [-19.5 1.5]
                                    :dimensions [14 15]}
+                  :bottom-helper {:rows 1
+                                  :cols 1
+                                  :offset [-38 -19]}
 
                   :matrix {:offset [25 -8]
                            :clusters {:finger-cluster {:rows 3
@@ -73,6 +69,7 @@
                                                        :offset [0 5]
                                                        ;; Split: +2 +8 -4 -10 -1
                                                        ;; MK5:   +3 +8 -5 -10 -3
+                                                       ;; Compromise: +2 +8 -4 -10 -2
                                                        :staggers [[0 0] [0 2] [0 10] [0 6] [0 -4] [0 -6]]}
                                       :thumb-cluster {:rows 1
                                                       :cols 5
@@ -156,42 +153,61 @@
                                              (* cap-y 0.7)
                                              2)))))))
 
+(defn half "Cuts the shape on the x/z plane and removes everything on negative x side."
+  [shape]
+  (let [neg-x (translate [-500 0 0] (cube 1000 1000 1000))]
+    (difference (union shape) neg-x)))
+
 (defn mirror-halves "Unions the shape and mirrors it around the y/z plane. Cut off the shape's -x parts before mirroring"
   [shape]
-  (let [neg-x (translate [-500 0 0] (cube 1000 1000 1000))
-        clean-shape (difference (union shape) neg-x)]
+  (let [clean-shape (half shape)]
     (union clean-shape
            (mirror [1 0 0] clean-shape))))
 
-(defn average [& vals]
-  (/ (reduce + vals) (count vals)))
+(defn top-aligned-cube
+  [config x y z]
+  (let [{{max-y :y} :top} config
+        top (- max-y (/ y 2))]
+    (translate [0 top 0] 
+               (cube x y z))))
 
-(defn minkowski2 "helper swapping the arguments for minkowski"
-  [shape outline]
-  (minkowski outline shape))
+(defn usb-c-cutout [config]
+  (let [{{contr-w :w
+          wall :top-wall} :controller} config]
+    (translate [0 (- 1 wall) 0] (top-aligned-cube config (/ contr-w 2) 5 5))))
+
+(defn controller-cutout
+  ([config]
+   (controller-cutout config 5))
+  ([config h]
+   (let [{{contr-w :w
+           contr-d :d
+           wall :top-wall} :controller} config]
+     (translate [0 (- wall) 0]
+                (union (top-aligned-cube config contr-w contr-d h))))))
+
+(defn controller-cutout-usbc [config]
+  (union (controller-cutout config)
+         (usb-c-cutout config)))
 
 (defn base-outline [config]
   (let [{plate-thickness :plate-thickness
          plate-border :plate-border
          {cap-x :x
           cap-y :y} :keycap-dimensions
-         {mirror-y-min :min
-          mirror-y-max :max
-          top-width :top-width} :plate-mirror-edge} config
-        mirror-edge-helper (translate [0 (average mirror-y-max mirror-y-min) 0]
-                                      (cube 0.01
-                                            (- mirror-y-max mirror-y-min)
-                                            plate-thickness))
-        mirror-top-helper (translate [0 mirror-y-max 0]
-                                     (cube  top-width
-                                            0.01
-                                            plate-thickness))]
-    (->> (cube (+ cap-x (* 2 plate-border))
-               (+ cap-y (* 2 plate-border))
-               plate-thickness)
+         {top-width :width} :top
+         bottom-cluster :bottom-helper} config
+        key-helper (cube (+ cap-x (* 2 plate-border))
+                         (+ cap-y (* 2 plate-border))
+                         plate-thickness)
+        controller-helper (controller-cutout config plate-thickness)
+        mirror-top-helper (top-aligned-cube config top-width 0.01 plate-thickness)
+        bottom-helper (place-in-cluster config key-helper bottom-cluster)]
+    (->> key-helper
          (place-at-key-positions config)
-         (cons mirror-edge-helper)
+         (cons controller-helper)
          (cons mirror-top-helper)
+         (cons bottom-helper)
          (apply hull)
          #_(minkowski2 (cylinder plate-border 0.01))
          (mirror-halves)
@@ -216,14 +232,6 @@
     (difference base-outline
                 (mirror-halves cap-cutouts))))
 
-
-(defn align-top [config shape]
-  (let [{{max-y :max} :plate-mirror-edge
-         {controller-height :d} :controller
-         controller-wall :controller-top-wall} config
-        top (- max-y controller-wall (/ controller-height 2))]
-    (translate [0 top 0] shape)))
-
 (defn plate-layer [config cutout-switch cutouts-other]
   (let [{battery-cutout-cluster :battery-cutout} config
         {[width depth] :dimensions} battery-cutout-cluster
@@ -237,21 +245,9 @@
      (difference base-outline
                  cutouts
                  cutout-battery
-                 (align-top config cutouts-other)
+                 cutouts-other
                  (screw-holes config)))))
 
-
-(defn usb-c-cutout [contr-w contr-d]
-  (translate [0 1 0] (cube (/ contr-w 2) (dec contr-d) 5)))
-
-(defn pcb-cutout [contr-w contr-d]
-  (cube contr-w contr-d 5))
-
-(defn controller-cutout [config]
-  (let [{{contr-w :w
-          contr-d :d} :controller} config]
-    (union (pcb-cutout contr-w contr-d)
-           (usb-c-cutout contr-w contr-d))))
 
 (defn magnet-cutouts [config]
   (let [{magnet-cluster :magnets} config
@@ -264,20 +260,23 @@
   (union #_(translate [0 5 0] (cube 17.5 31 4.3))
    (difference (plate-layer config
                             (single-key-hole config 0 0)
-                            (controller-cutout config))
+                            (controller-cutout-usbc config))
                (magnet-cutouts config))))
 
-(defn plate-layer-lower1 [config]
+(defn cutout-controller-wires [config]
   (let [{{contr-w :w
-          contr-d :d} :controller} config
-        power-switch-cutout (translate [18
-                                        (- (/ contr-d 2)
-                                           0)
-                                        0]
-                                       (cube 7.2 10 5))
-        cutout-controller (hull (cube contr-w contr-d 5)
-                                (cube (+ contr-w 5) (- contr-d 6) 5))
-        cutout-usb-c (usb-c-cutout contr-w contr-d)]
+          contr-d :d
+          wall :top-wall} :controller} config]
+    (translate [0 (- wall) 0] (hull (top-aligned-cube config contr-w contr-d 5)
+                                    ;; move down to center of controller
+                                    (translate [0 -3 0] 
+                                               (top-aligned-cube config (+ contr-w 5) (- contr-d 6) 5))))))
+
+(defn plate-layer-lower1 [config]
+  (let [power-switch-cutout (translate [17 2 0]
+                                       (top-aligned-cube config 7.2 10 5))
+        cutout-controller (cutout-controller-wires config)
+        cutout-usb-c (usb-c-cutout config)]
     (difference (plate-layer config
                              (single-key-hole config 0 1.2)
                              (union power-switch-cutout
@@ -286,17 +285,9 @@
                 (magnet-cutouts config))))
 
 (defn plate-layer-lower2 [config]
-  (let [{{contr-w :w
-          contr-d :d} :controller
-         controller-wall :controller-top-wall} config
-        power-switch-cutout (translate [18
-                                        (- (/ contr-d 2)
-                                           (* 2 controller-wall)
-                                           0)
-                                        0]
-                                       (cube 7.2 5 5))
-        cutout-controller (hull (cube contr-w (- contr-d 2) 5)
-                                (cube (+ contr-w 5) (- contr-d 6) 5))]
+  (let [power-switch-cutout (translate [17 -3 0]
+                                       (top-aligned-cube config 7.2 5 5))
+        cutout-controller (cutout-controller-wires config)]
     (plate-layer config
                  (single-key-hole config -0.5 -0.5)
                  (union power-switch-cutout
@@ -330,15 +321,7 @@
               (screw-holes config)))
 
 (defn frame-layer-half [config]
-  (let [{{top :max
-          bottom :min} :plate-mirror-edge} config
-        x-dim 140
-        y-dim (- top bottom)
-        frame-layer (frame-layer config)]
-    ;; center cube in y, shift to positive x only
-    (intersection (translate [(/ x-dim 2) (/ (+ top bottom) 2) 0]
-                             (cube x-dim y-dim 10))
-                  frame-layer)))
+  (half (frame-layer config)))
 
 
 (defn bottom-layer [config]
@@ -376,7 +359,7 @@
         {strut-radius :strut-radius} screwhole-cluster
         cutout-switches (place-at-key-positions config (single-key-hole config -4 -4))
         foam (hull (mirror-halves (place-at-key-positions config (single-key-hole config 0 0))))
-        cutout-controller (align-top config (controller-cutout config))
+        cutout-controller (controller-cutout-usbc config)
         struts-right (place-in-cluster config
                                        (cylinder strut-radius plate-thickness)
                                        screwhole-cluster)]
@@ -423,13 +406,12 @@
 (defn optimized-placement [config]
   ;; move to origin
   (let [{[x-offset _] :mirror-offset
-         {top :max
-          bottom :min} :plate-mirror-edge} config
+         {top :y} :top} config
         x-dist (* 2 (+ 115 x-offset))
-        y-dist (- top bottom 12)]
+        y-dist (+ top 28)]
     (union
      ;; wood outline
-     (color [0.3 0.3 0.6 1] (map (fn [n] (translate [(* (/ x-dist 2) (+ n 0.5)) 122.5 -5]
+     #_(color [0.3 0.3 0.6 1] (map (fn [n] (translate [(* (/ x-dist 2) (+ n 0.5)) 122.5 -5]
                                                     (cube (dec (/ x-dist 2)) 245 1)))
                                  (range 7)))
      (translate [(* 1 x-dist) 310 0] (mirror [1 0 0] (rubber-feet-outline-layer config)))
@@ -472,7 +454,7 @@
             (write-scad (create-multi-model config)))
       (spit "things/mk5/all.scad" (write-scad (project (all-layers config))))
       ;; space-efficient placement for laser cutting
-      (spit "things/mk5/optimized.scad" (write-scad (optimized-placement config))))))
+      (spit "things/mk5/optimized.scad" (write-scad (project (optimized-placement config)))))))
 
 
 (run base-config)

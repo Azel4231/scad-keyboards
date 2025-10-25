@@ -23,7 +23,8 @@
                   :key-distance {:x 19.0 :y 19.0}
                   :keycap-kerf 0.75
                   :plate-thickness 1.5
-                  :plate-border 3.5
+                  ;; initially 3.5, 4.5 to make more room for kerf
+                  :plate-border 4.5
                   :mirror-offset [27.5 0]
                   :keycap-dimensions {:x 18 :y 18 :z 10}
                   :top {:y 85 :width 26}
@@ -168,7 +169,7 @@
   [config x y z]
   (let [{{max-y :y} :top} config
         top (- max-y (/ y 2))]
-    (translate [0 top 0] 
+    (translate [0 top 0]
                (cube x y z))))
 
 (defn usb-c-cutout [config]
@@ -232,6 +233,14 @@
     (difference base-outline
                 (mirror-halves cap-cutouts))))
 
+(defn battery-cutout [config]
+  (let [{battery-cutout-cluster :battery-cutout} config
+        {[width depth] :dimensions} battery-cutout-cluster]
+    (hull (mirror-halves
+           (place-in-cluster config
+                             (cube width depth 10)
+                             battery-cutout-cluster)))))
+
 (defn plate-layer [config cutout-switch cutouts-other]
   (let [{battery-cutout-cluster :battery-cutout} config
         {[width depth] :dimensions} battery-cutout-cluster
@@ -269,7 +278,7 @@
           wall :top-wall} :controller} config]
     (translate [0 (- wall) 0] (hull (top-aligned-cube config contr-w contr-d 5)
                                     ;; move down to center of controller
-                                    (translate [0 -3 0] 
+                                    (translate [0 -3 0]
                                                (top-aligned-cube config (+ contr-w 5) (- contr-d 6) 5))))))
 
 (defn plate-layer-lower1 [config]
@@ -352,13 +361,16 @@
                 rubber-feet-indicator
                 screw-indicator)))
 
-;; for sound dampening
+(defn foam-outline [config]
+  (hull (mirror-halves (place-at-key-positions config
+                                               (single-key-hole config 0 0)))))
+
 (defn foam-layer [config]
   (let [{plate-thickness :plate-thickness
          screwhole-cluster :screwholes} config
         {strut-radius :strut-radius} screwhole-cluster
         cutout-switches (place-at-key-positions config (single-key-hole config -4 -4))
-        foam (hull (mirror-halves (place-at-key-positions config (single-key-hole config 0 0))))
+        foam (foam-outline config)
         cutout-controller (controller-cutout-usbc config)
         struts-right (place-in-cluster config
                                        (cylinder strut-radius plate-thickness)
@@ -369,6 +381,15 @@
                                      struts-right
                                      cutout-controller
                                      cutout-switches))))))
+
+(defn foam-layer-helper "Lines for engraving the foam with a grid for easier molding"
+  [config]
+  (let [between-switches (place-at-key-positions config (single-key-hole config 2 2))
+        battery (battery-cutout config)
+        foam (foam-outline config)]
+    (mirror-halves (union
+                    battery
+                    between-switches))))
 
 
 (defn create-model [config]
@@ -412,10 +433,11 @@
     (union
      ;; wood outline
      #_(color [0.3 0.3 0.6 1] (map (fn [n] (translate [(* (/ x-dist 2) (+ n 0.5)) 122.5 -5]
-                                                    (cube (dec (/ x-dist 2)) 245 1)))
-                                 (range 7)))
+                                                      (cube (dec (/ x-dist 2)) 245 1)))
+                                   (range 7)))
      (translate [(* 1 x-dist) 310 0] (mirror [1 0 0] (rubber-feet-outline-layer config)))
      (translate [(* 2 x-dist) 310 0] (mirror [1 0 0] (foam-layer config)))
+     (translate [(* 3 x-dist) 310 0] (mirror [1 0 0] (foam-layer-helper config)))
      ;; layers
      (translate [x-dist  (- y-dist 70) 0]
                 (union

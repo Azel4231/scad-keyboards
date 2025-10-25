@@ -1,8 +1,7 @@
 ; check if nrepl version in ~/.lein/profilec.clj is up to date
-; lein nrepl
-; connect to nrepl from IDE/Calva
+; lein nrepl + connect to nrepl from IDE/Calva (or just jack-in)
 ; eval file
-; open ./things/mk5/all.scad in openScad
+; open ./things/mk5/all.scad in openScad (will update automatically when re-evaluating)
 
  (ns azelusMk5
    (:refer-clojure :exclude [use import])
@@ -424,6 +423,7 @@
    #_(translate [275 -300 0] (bottom-layer config))
    #_(translate [-220 -210 0] (rotate (* PI 3/2) [0 0 1] (plate-layer-upper config)))))
 
+;; Place layers on a 100x25 cm^2 plywood sheet for space-efficient laser cutting
 (defn optimized-placement [config]
   ;; move to origin
   (let [{[x-offset _] :mirror-offset
@@ -475,7 +475,6 @@
       (spit "things/mk5/azelusmk5.scad"
             (write-scad (create-multi-model config)))
       (spit "things/mk5/all.scad" (write-scad (project (all-layers config))))
-      ;; space-efficient placement for laser cutting
       (spit "things/mk5/optimized.scad" (write-scad (project (optimized-placement config)))))))
 
 

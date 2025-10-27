@@ -3,7 +3,11 @@
 ; eval file
 ; open ./things/mk5/all.scad in openScad (will update automatically when re-evaluating)
 
- (ns azelusMk5
+
+;; TODOs
+;; Frame with magnets (instead of screws)
+
+ (ns scad-keyboards.mk6
    (:refer-clojure :exclude [use import])
    (:require [scad-clj.scad :refer [write-scad]]
              [scad-clj.model :refer [translate rotate scale intersection union hull difference cube color mirror cylinder project minkowski]]))
@@ -26,7 +30,8 @@
                   :plate-border 4.5
                   :mirror-offset [27.5 0]
                   :keycap-dimensions {:x 18 :y 18 :z 10}
-                  :top {:y 85 :width 26}
+                  ;; 86 to avoid holes between top and plate layer
+                  :top {:y 86 :width 26}
 
                   ;; Rubber feet dimensions that match the MacBook Pro keyboard (ISO-DE):
                   ;; The top feet are aligned horizontally and located in the gap between F-keys and number-row (thus x-distance between them can be arbitrary but less than 270mm).
@@ -472,10 +477,10 @@
     (binding [scad-clj.model/*fa* fa
               scad-clj.model/*fn* fn
               scad-clj.model/*fs* fs]
-      (spit "things/mk5/azelusmk5.scad"
+      (spit "things/mk6/mk6.scad"
             (write-scad (create-multi-model config)))
-      (spit "things/mk5/all.scad" (write-scad (project (all-layers config))))
-      (spit "things/mk5/optimized.scad" (write-scad (project (optimized-placement config)))))))
+      (spit "things/mk6/all.scad" (write-scad (project (all-layers config))))
+      (spit "things/mk6/optimized.scad" (write-scad (project (optimized-placement config)))))))
 
 
 (run base-config)

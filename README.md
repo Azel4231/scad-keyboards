@@ -18,11 +18,14 @@ Mauersegler (Highly work in Progress)
 
 MK5
 
+![Image](mk5.png)
+(featuring the [Anymak:END Layout](https://github.com/rpnfan/Anymak))
 A model that combines the designs of my preexisting models and Redpoll.
 
 * MX compatible
 * 14 degrees opening angle
 
+## Notes
 
 This repo is inspired by the [Dactyl](https://github.com/adereth/dactyl-keyboard) and the [Dactyl Manuform](https://github.com/abstracthat/dactyl-manuform) projects (though no code was used). 
 
@@ -31,5 +34,4 @@ This repo is inspired by the [Dactyl](https://github.com/adereth/dactyl-keyboard
 
 Copyright © 2025 Azel4231
 
-The source code and the generated models are distributed under the [Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) License](LICENSE) (https://creativecommons.org/licenses/by-nc-sa/4.0/).
-(formerly AGPL 3.0)
+The source code and the generated models are distributed under the [Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) License](LICENSE) (https://creativecommons.org/licenses/by-nc-sa/4.0/)

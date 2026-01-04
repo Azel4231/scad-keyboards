@@ -66,32 +66,32 @@ projection (cut = false) {
           }
         }
         rotate (a=14.0, v=[0, 0, 1]) {
-          translate ([114.0, 13.0, 0]) {
+          translate ([114.0, 12.0, 0]) {
             cube ([13.96, 13.96, 0.01], center=true);
           }
         }
         rotate (a=14.0, v=[0, 0, 1]) {
-          translate ([114.0, 32.0, 0]) {
+          translate ([114.0, 31.0, 0]) {
             cube ([13.96, 13.96, 0.01], center=true);
           }
         }
         rotate (a=14.0, v=[0, 0, 1]) {
-          translate ([114.0, 51.0, 0]) {
+          translate ([114.0, 50.0, 0]) {
             cube ([13.96, 13.96, 0.01], center=true);
           }
         }
         rotate (a=14.0, v=[0, 0, 1]) {
-          translate ([133.0, 12.0, 0]) {
+          translate ([133.0, 10.0, 0]) {
             cube ([13.96, 13.96, 0.01], center=true);
           }
         }
         rotate (a=14.0, v=[0, 0, 1]) {
-          translate ([133.0, 31.0, 0]) {
+          translate ([133.0, 29.0, 0]) {
             cube ([13.96, 13.96, 0.01], center=true);
           }
         }
         rotate (a=14.0, v=[0, 0, 1]) {
-          translate ([133.0, 50.0, 0]) {
+          translate ([133.0, 48.0, 0]) {
             cube ([13.96, 13.96, 0.01], center=true);
           }
         }
@@ -183,32 +183,32 @@ projection (cut = false) {
       }
     }
     rotate (a=14.0, v=[0, 0, 1]) {
-      translate ([114.0, 13.0, 0]) {
+      translate ([114.0, 12.0, 0]) {
         cube ([19.5, 19.5, 25], center=true);
       }
     }
     rotate (a=14.0, v=[0, 0, 1]) {
-      translate ([114.0, 32.0, 0]) {
+      translate ([114.0, 31.0, 0]) {
         cube ([19.5, 19.5, 25], center=true);
       }
     }
     rotate (a=14.0, v=[0, 0, 1]) {
-      translate ([114.0, 51.0, 0]) {
+      translate ([114.0, 50.0, 0]) {
         cube ([19.5, 19.5, 25], center=true);
       }
     }
     rotate (a=14.0, v=[0, 0, 1]) {
-      translate ([133.0, 12.0, 0]) {
+      translate ([133.0, 10.0, 0]) {
         cube ([19.5, 19.5, 25], center=true);
       }
     }
     rotate (a=14.0, v=[0, 0, 1]) {
-      translate ([133.0, 31.0, 0]) {
+      translate ([133.0, 29.0, 0]) {
         cube ([19.5, 19.5, 25], center=true);
       }
     }
     rotate (a=14.0, v=[0, 0, 1]) {
-      translate ([133.0, 50.0, 0]) {
+      translate ([133.0, 48.0, 0]) {
         cube ([19.5, 19.5, 25], center=true);
       }
     }

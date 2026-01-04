@@ -27,9 +27,9 @@
 
               :opening-angle (deg2rad 14)
               :plate-thickness 1.5
-              :layer-thickness 2
+              :layer-thickness 1.5
               :case-wall-thickness 10
-              :plate-border 2
+              :plate-border 4
               ;; :plate-mirror-edge {:min 22 :max 101 :x 3}  ;; Obere Kante gerade weiter führen
               :plate-mirror-edge {:min 38 :max 96.1 :x 3}  ;; where the halves touch
               ;; :plate-mirror-edge {:min 22 :max 84 :x 3}  ;; parallel zur Unterkante
@@ -51,7 +51,7 @@
               :matrix {:offset [38 12]
                        :clusters [{:rows 3 ;; finger cluster
                                    :cols 6
-                                   :staggers [[0 0] [0 2] [0 10] [0 6] [0 -4] [0 -5]] ;; mm
+                                   :staggers [[0 0] [0 2] [0 10] [0 6] [0 -5] [0 -7]] ;; mm
                                    :offset-units [0 5/19]
                                    :additional-positions [[1 3]]} 
                                   {:rows 1 ;; thumb cluster
@@ -104,11 +104,13 @@
          cols :cols
          additional :additional-positions
          staggers :staggers
-         offset :offset} cluster-def
+         offset-units :offset-units} cluster-def
+        {{x-unit :x y-unit :y} :key-distance} config
         positions (for [c (range cols)
                         r (range rows)]
                     [c r])
-        positions (concat positions additional)]
+        positions (concat positions additional)
+        offset (map * offset-units [x-unit y-unit])]
     (->> positions
          (map (fn [[col _ :as pos]] 
                 (place-shape config 

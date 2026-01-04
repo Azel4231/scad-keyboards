@@ -1,7 +1,7 @@
 ; check if nrepl version in ~/.lein/profilec.clj is up to date
 ; lein nrepl + connect to nrepl from IDE/Calva (or just jack-in)
 ; eval file
-; open ./things/mk5/all.scad in openScad (will update automatically when re-evaluating)
+; open ./things/mk6/all.scad in openScad (will update automatically when re-evaluating)
 
 
 ;; TODOs
@@ -24,9 +24,10 @@
                   ;; usually 13.98 (wood only: 13.95, wood with varnish: 13.98)
                   :cutout-dimensions {:x 13.98 :y 13.98}
                   :key-distance {:x 19.0 :y 19.0}
-                  :keycap-kerf 0.75
+                  ;; cutout for each keycap is key-distance + keycap-kerf
+                  :keycap-kerf 0.75 
                   :plate-thickness 1.5
-                  ;; initially 3.5, 4.5 to make more room for kerf
+                  ;; initially 3.5, 4.5 to make more room for laser kerf
                   :plate-border 4.5
                   :mirror-offset [27.5 0]
                   :keycap-dimensions {:x 18 :y 18 :z 10}
@@ -74,8 +75,8 @@
                                                        :offset [0 5]
                                                        ;; Split: +2 +8 -4 -10 -1
                                                        ;; MK5:   +3 +8 -5 -10 -3
-                                                       ;; Compromise: +2 +8 -4 -10 -2
-                                                       :staggers [[0 0] [0 2] [0 10] [0 6] [0 -4] [0 -6]]}
+                                                       ;; MK6: try more pinkey stagger (-11)
+                                                       :staggers [[0 0] [0 2] [0 10] [0 6] [0 -5] [0 -7]]}
                                       :thumb-cluster {:rows 1
                                                       :cols 5
                                                       :offset [-19 -19]

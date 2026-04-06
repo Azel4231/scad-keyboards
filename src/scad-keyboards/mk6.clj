@@ -48,8 +48,11 @@
                                         :offset [0 0]
                                         :angle 0}
 
-                  ;; :controller {:w 18 :d 33.5 :h 1.5 :top-wall 3}  ;; nice!nano
-                  :controller {:w 18 :d 21 :h 1.5 :top-wall 3}  ;; xiao-ble
+                  ;;:controller {:w 18 :d 33.5 :h 3.0 :usbc-y 1.5 :usbc-z 0 :wall 3}  ;; nice!nano
+                  :controller {:w 18 :d 21 :h 1.5
+                               :usbc-y 1.5 ;; 1.5mm overhang (top of controller)
+                               :usbc-z 1.5 ;; 1.5mm upwards (placed on top of pcb)
+                               :wall 3}  ;; xiao-ble ()
                   :battery {:w 17.5 :d 31 :h 4.3 :wall 3}
 
                   :screwholes {:additional-positions [[4.8 2.6] [5 -0.65] [1.7 -1.4] [1 4.1] [-1.75 -1.3]]
@@ -60,7 +63,7 @@
                   :battery-cutout {:rows 3
                                    :cols 1
                                    :offset [-19.5 1.5]
-                                   :dimensions [14 15]} 
+                                   :dimensions [14 15]}
                   #_(comment
                       :top-helper {:rows 1
                                    :cols 1
@@ -171,27 +174,24 @@
     (union clean-shape
            (mirror [1 0 0] clean-shape))))
 
-(defn top-aligned-cube
-  [config x y z]
-  (let [{{max-y :y} :top} config
-        top (- max-y (/ y 2))]
-    (translate [0 top 0]
-               (cube x y z))))
-
 (defn usb-c-cutout [config]
-  (let [{{contr-w :w
-          wall :top-wall} :controller} config]
-    (translate [0 (- 1 wall) 0] (top-aligned-cube config (/ contr-w 2) 5 5))))
+  (let [{{contr-d :d
+          usbc-y :usbc-y
+          usbc-z :usbc-z} :controller} config]
+    (->> (cube 9 7 3)
+         (translate [0 (/ (- contr-d 7) 2) 1.5]) ;; align with top (and bottom) of pcb
+         (translate [0 usbc-y usbc-z]) ;; move according to offsets in controller dimensions
+         )))
 
 (defn controller-cutout
   ([config]
    (controller-cutout config 5))
   ([config h]
    (let [{{contr-w :w
-           contr-d :d
-           wall :top-wall} :controller} config]
-     (cube contr-w contr-d h)
-     )))
+           contr-d :d} :controller} config]
+     (cube contr-w contr-d h))))
+
+;; TODOs: Controller richtig zusammensetzen, aber unrotiert. Erst in plate-layer functions platzieren
 
 (defn controller-cutout-usbc [config]
   (union (controller-cutout config)
@@ -244,27 +244,12 @@
     (difference base-outline
                 (mirror-halves cap-cutouts))))
 
-(defn battery-cutout [config]
-  (let [{battery-cutout-cluster :battery-cutout} config
-        {[width depth] :dimensions} battery-cutout-cluster]
-    (hull (mirror-halves
-           (place-in-cluster config
-                             (cube width depth 10)
-                             battery-cutout-cluster)))))
-
 (defn plate-layer [config cutout-switch cutouts-other]
-  (let [{battery-cutout-cluster :battery-cutout} config
-        {[width depth] :dimensions} battery-cutout-cluster
-        base-outline (base-outline config)
-        cutouts (mirror-halves (place-at-key-positions config cutout-switch))
-        cutout-battery (hull (mirror-halves
-                              (place-in-cluster config
-                                                (cube width depth 10)
-                                                battery-cutout-cluster)))]
+  (let [base-outline (base-outline config)
+        cutouts (mirror-halves (place-at-key-positions config cutout-switch))]
     (union
      (difference base-outline
                  cutouts
-                 cutout-battery
                  cutouts-other
                  (screw-holes config)))))
 
@@ -283,33 +268,39 @@
    (cube w d h)))
 
 (defn plate-layer-upper [config]
-  (let [{{{finger-cluster :finger-cluster} :clusters} :matrix} config]
-    (union #_(translate [0 5 0] (cube 17.5 31 4.3))
-     (difference (plate-layer config
-                              (single-key-hole config 0 0)
-                              (controller-cutout-usbc config))
-                 (magnet-cutouts config))
-           (place-in-cluster-single config
-                                    (color [0.3 0.9 0.3 1] (battery config))
-                                    finger-cluster
-                                    [-1 0.1])
-           (place-in-cluster-single config
-                                    (color [0.3 0.3 0.3 1] (controller-cutout-usbc config))
-                                    finger-cluster
-                                    [0 3]))))
+  (let [{{{finger-cluster :finger-cluster} :clusters} :matrix} config
+        controller-cutout (place-in-cluster-single config
+                                                   (color [0.4 0.4 0.4 1] (controller-cutout-usbc config))
+                                                   finger-cluster
+                                                   [0 3])
+        ;; FIXME remove
+        controller-cutout (translate [-1 2 0] controller-cutout)
+        battery (place-in-cluster-single config
+                                         (color [0.3 0.9 0.3 1] (battery config))
+                                         finger-cluster
+                                         [-1 0.1])
+        ;; FIXME remove
+        battery (translate [0 0 3] battery)
+        ]
+    (union (difference (plate-layer config
+                                    (single-key-hole config 0 0)
+                                    controller-cutout)
+                       (magnet-cutouts config))
+           battery
+           controller-cutout)))
 
 (defn cutout-controller-wires [config]
   (let [{{contr-w :w
           contr-d :d
-          wall :top-wall} :controller} config]
-    (translate [0 (- wall) 0] (hull (top-aligned-cube config contr-w contr-d 5)
+          wall :wall} :controller} config]
+    (translate [0 (- wall) 0] (hull (cube contr-w contr-d 5)
                                     ;; move down to center of controller
                                     (translate [0 -3 0]
-                                               (top-aligned-cube config (+ contr-w 5) (- contr-d 6) 5))))))
+                                               (cube (+ contr-w 5) (- contr-d 6) 5))))))
 
 (defn plate-layer-lower1 [config]
   (let [power-switch-cutout (translate [17 2 0]
-                                       (top-aligned-cube config 7.2 10 5))
+                                       (cube 7.2 10 5))
         cutout-controller (cutout-controller-wires config)
         cutout-usb-c (usb-c-cutout config)]
     (difference (plate-layer config
@@ -321,7 +312,7 @@
 
 (defn plate-layer-lower2 [config]
   (let [power-switch-cutout (translate [17 -3 0]
-                                       (top-aligned-cube config 7.2 5 5))
+                                       (cube 7.2 5 5))
         cutout-controller (cutout-controller-wires config)]
     (plate-layer config
                  (single-key-hole config -0.5 -0.5)
@@ -411,10 +402,8 @@
 (defn foam-layer-helper "Lines for engraving the foam with a grid for easier molding"
   [config]
   (let [between-switches (place-at-key-positions config (single-key-hole config 2 2))
-        battery (battery-cutout config)
         foam (foam-outline config)]
     (mirror-halves (union
-                    battery
                     between-switches))))
 
 

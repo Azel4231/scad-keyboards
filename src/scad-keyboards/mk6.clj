@@ -55,12 +55,9 @@
                                :wall 3}  ;; xiao-ble ()
                   :battery {:w 17.5 :d 31 :h 4.3 :wall 3}
 
-                  :screwholes {:additional-positions [[4.8 2.6] [5 -0.65] [1.7 -1.4] [1 4.1] [-1.75 -1.3]]
-                               :screwhole-radius 0.6
-                               :strut-radius 5}
                   :magnets {:additional-positions [[4 2.8] [4 -0.7]]
                             :magnet-radius 3}
-                  
+
                   :battery-cutout {:rows 3
                                    :cols 1
                                    :offset [-19.5 1.5]
@@ -200,13 +197,6 @@
   (union (controller-cutout config)
          (usb-c-cutout config)))
 
-(defn screw-holes [config]
-  (let [{screw-cluster :screwholes} config
-        {hole-radius :screwhole-radius} screw-cluster
-        hole (color [0 0 0 1] (cylinder hole-radius 15))]
-    (mirror-halves
-     (place-in-cluster config hole screw-cluster))))
-
 (defn magnet-cutouts [config]
   (let [{magnet-cluster :magnets} config
         {radius :magnet-radius} magnet-cluster]
@@ -293,8 +283,7 @@
     (union
      (difference base-outline
                  cutouts
-                 cutouts-other
-                 (screw-holes config)))))
+                 cutouts-other))))
 
 (defn plate-layer-upper [config]
   (let [{{{finger-cluster :finger-cluster} :clusters} :matrix} config
@@ -350,40 +339,21 @@
                         cutout-controller))))
 
 
-(defn frame-layer-internal [config]
-  (let [{plate-thickness :plate-thickness
-         screwhole-cluster :screwholes} config
-        {strut-radius :strut-radius} screwhole-cluster
-        base-outline (base-outline config)
+(defn frame-layer [config]
+  (let [base-outline (base-outline config)
         cutout-right (apply hull (place-at-key-positions config (single-key-hole config 0 0)))
         cutout (hull (mirror-halves cutout-right))
         cutout-controller (translate [0 65 0] (cube 28 30 5))
         cutout-switch (translate [18 75 0] (cube 12 8 5))
-        cutout-reset (translate [-18 75 0] (cube 10 8 5))
-        struts-right (place-in-cluster config
-                                       (cylinder strut-radius plate-thickness)
-                                       screwhole-cluster)]
-    (difference (union
-                 (mirror-halves (map (partial intersection base-outline) struts-right))
-                 (difference base-outline
-                             (mirror-halves cutout)
-                             cutout-controller
-                             cutout-switch
-                             cutout-reset))
-                (screw-holes config))))
-
-(defn frame-layer [config]
-  (difference (frame-layer-internal config)
-              (screw-holes config)))
-
-(defn frame-layer-half [config]
-  (half (frame-layer config)))
-
+        cutout-reset (translate [-18 75 0] (cube 10 8 5))]
+    (difference base-outline
+                (mirror-halves cutout)
+                cutout-controller
+                cutout-switch
+                cutout-reset)))
 
 (defn bottom-layer [config]
-  (difference (base-outline config)
-              (screw-holes config)))
-
+  (base-outline config))
 
 
 (defn rubber-feet-outline-layer [config]
@@ -447,8 +417,6 @@
                                                       (cube (dec (/ x-dist 2)) 245 1)))
                                    (range 7)))
      (translate [(* 1 x-dist) 310 0] (mirror [1 0 0] (rubber-feet-outline-layer config)))
-     (translate [(* 2 x-dist) 310 0] (mirror [1 0 0] (foam-layer config)))
-     (translate [(* 3 x-dist) 310 0] (mirror [1 0 0] (foam-layer-helper config)))
      ;; layers
      (translate [x-dist  (- y-dist 70) 0]
                 (union

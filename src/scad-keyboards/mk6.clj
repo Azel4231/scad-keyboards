@@ -60,17 +60,11 @@
                                :strut-radius 5}
                   :magnets {:additional-positions [[4 2.8] [4 -0.7]]
                             :magnet-radius 3}
+                  
                   :battery-cutout {:rows 3
                                    :cols 1
                                    :offset [-19.5 1.5]
                                    :dimensions [14 15]}
-                  #_(comment
-                      :top-helper {:rows 1
-                                   :cols 1
-                                   :offset [4 64]}
-                      :bottom-helper {:rows 1
-                                      :cols 1
-                                      :offset [-38 -19]})
 
                   :matrix {:offset [26 -8]
                            :clusters {:finger-cluster {:rows 3
@@ -79,7 +73,7 @@
                                                        :offset [5 5]
                                                        ;; Split: +2 +8 -4 -10 -1
                                                        ;; MK5:   +3 +8 -5 -10 -3
-                                                       ;; MK6: try more pinkey stagger (-11)
+                                                       ;; MK6: try more pinkey stagger (-11 -2)
                                                        :staggers [[0 0] [0 2] [0 10] [0 6] [0 -5] [0 -7]]}
                                       :thumb-cluster {:rows 1
                                                       :cols 5
@@ -96,10 +90,9 @@
 
 (def config-variant {:thumb-col-number 4})
 
-(defn single-key-hole [config x-kerf y-kerf]
-  (let [{{cutout-width :x
-          cutout-height :y} :cutout-dimensions} config]
-    (cube (+ cutout-width x-kerf) (+ cutout-height y-kerf) 10)))
+;; -------------------------------------------------
+;; utility functions
+;; -------------------------------------------------
 
 (defn place-in-cluster-single "Place shape at a single cluster position"
   [config shape cluster-def pos]
@@ -125,7 +118,7 @@
                      0])
          (rotate angle [0 0 1]))))
 
-(defn place-in-cluster "Place shape iterating over all positions in a single single cluster"
+(defn place-in-cluster "Place shape iterating over all positions in a single cluster"
   [config shape cluster-def]
   (let [cluster-def (merge default-cluster cluster-def)
         {rows :rows
@@ -149,6 +142,28 @@
          vals
          (mapcat (partial place-in-cluster config shape)))))
 
+
+(defn half "Cuts the shape on the x/z plane and removes everything on negative x side."
+  [shape]
+  (let [neg-x (translate [-500 0 0] (cube 1000 1000 1000))]
+    (difference (union shape) neg-x)))
+
+(defn mirror-halves "Unions the shape and mirrors it around the y/z plane. Cut off the shape's -x parts before mirroring"
+  [shape]
+  (let [clean-shape (half shape)]
+    (union clean-shape
+           (mirror [1 0 0] clean-shape))))
+
+;; -------------------------------------------------
+;; objects
+;; -------------------------------------------------
+
+(defn single-key-hole [config x-kerf y-kerf]
+  (let [{{cutout-width :x
+          cutout-height :y} :cutout-dimensions} config]
+    (cube (+ cutout-width x-kerf) (+ cutout-height y-kerf) 10)))
+
+
 (defn keycap [config]
   (let [{{cap-x :x
           cap-y :y
@@ -163,16 +178,6 @@
                                              (* cap-y 0.7)
                                              2)))))))
 
-(defn half "Cuts the shape on the x/z plane and removes everything on negative x side."
-  [shape]
-  (let [neg-x (translate [-500 0 0] (cube 1000 1000 1000))]
-    (difference (union shape) neg-x)))
-
-(defn mirror-halves "Unions the shape and mirrors it around the y/z plane. Cut off the shape's -x parts before mirroring"
-  [shape]
-  (let [clean-shape (half shape)]
-    (union clean-shape
-           (mirror [1 0 0] clean-shape))))
 
 (defn usb-c-cutout [config]
   (let [{{contr-d :d
@@ -191,11 +196,55 @@
            contr-d :d} :controller} config]
      (cube contr-w contr-d h))))
 
-;; TODOs: Controller richtig zusammensetzen, aber unrotiert. Erst in plate-layer functions platzieren
-
 (defn controller-cutout-usbc [config]
   (union (controller-cutout config)
          (usb-c-cutout config)))
+
+(defn screw-holes [config]
+  (let [{screw-cluster :screwholes} config
+        {hole-radius :screwhole-radius} screw-cluster
+        hole (color [0 0 0 1] (cylinder hole-radius 15))]
+    (mirror-halves
+     (place-in-cluster config hole screw-cluster))))
+
+(defn magnet-cutouts [config]
+  (let [{magnet-cluster :magnets} config
+        {radius :magnet-radius} magnet-cluster]
+    (mirror-halves (place-in-cluster config
+                                     (cylinder radius 10)
+                                     magnet-cluster))))
+
+(defn battery [config]
+  (let [{{w :w
+          d :d
+          h :h} :battery} config]
+    (cube w d h)))
+
+(defn cutout-controller-wires [config]
+  (let [{{contr-w :w
+          contr-d :d
+          wall :wall} :controller} config]
+    (translate [0 (- wall) 0] (hull (cube contr-w contr-d 5)
+                                    ;; move down to center of controller
+                                    (translate [0 -3 0]
+                                               (cube (+ contr-w 5) (- contr-d 6) 5))))))
+(defn rubber-feet [config]
+  (let [{feet-config :rubber-feet} config]
+    (map (fn [{x :x
+               y :y
+               w :w
+               d :d
+               h :h}]
+           (translate [x y 0]
+                      (color [0.3 0.3 0.3 1]
+                             (cube w d h))))
+         feet-config)))
+
+
+
+;; -------------------------------------------------
+;; layers
+;; -------------------------------------------------
 
 (defn base-outline [config]
   (let [{plate-thickness :plate-thickness
@@ -204,8 +253,8 @@
           cap-y :y} :keycap-dimensions
          {{finger-cluster :finger-cluster
            thumb-cluster :thumb-cluster} :clusters} :matrix} config
-        ;; use stagger of second column (to match y of the top key)
-        top-cluster (assoc-in finger-cluster [:staggers 0] 
+        ;; make upper edge parallel to bottom, by matching the y of the topmost key which means using the stagger of the second column
+        top-cluster (assoc-in finger-cluster [:staggers 0]
                               (get-in finger-cluster [:staggers 1]))
         key-helper (cube (+ cap-x (* 2 plate-border))
                          (+ cap-y (* 2 plate-border))
@@ -225,12 +274,6 @@
          (half)
          (color [0.98 0.92 0.6 1]))))
 
-(defn screw-holes [config]
-  (let [{screw-cluster :screwholes} config
-        {hole-radius :screwhole-radius} screw-cluster
-        hole (color [0 0 0 1] (cylinder hole-radius 15))]
-    (mirror-halves
-     (place-in-cluster config hole screw-cluster))))
 
 (defn top-layer [config]
   (let [{{cap-x :x
@@ -253,20 +296,6 @@
                  cutouts-other
                  (screw-holes config)))))
 
-
-(defn magnet-cutouts [config]
-  (let [{magnet-cluster :magnets} config
-        {radius :magnet-radius} magnet-cluster]
-    (mirror-halves (place-in-cluster config
-                                     (cylinder radius 10)
-                                     magnet-cluster))))
-
-(defn battery [config]
-  (let[{{w :w
-         d :d
-         h :h} :battery} config]
-   (cube w d h)))
-
 (defn plate-layer-upper [config]
   (let [{{{finger-cluster :finger-cluster} :clusters} :matrix} config
         controller-cutout (place-in-cluster-single config
@@ -280,23 +309,24 @@
                                          finger-cluster
                                          [-1 0.1])
         ;; FIXME remove
-        battery (translate [0 0 3] battery)
-        ]
+        battery (translate [3 -2 1] battery)
+        magnets (->> [[-0.75 2.6]
+                      [-1.5 -0.2]
+                      [4 2.8]
+                      [4 -0.8]]
+                     (map (partial place-in-cluster-single config
+                                   (color [0.7 0.7 0.7 1] (cylinder 3 3))
+                                   finger-cluster))
+                     (apply union))
+        magnets (translate [0 0 3] magnets)]
     (union (difference (plate-layer config
                                     (single-key-hole config 0 0)
                                     controller-cutout)
                        (magnet-cutouts config))
            battery
-           controller-cutout)))
+           controller-cutout
+           magnets)))
 
-(defn cutout-controller-wires [config]
-  (let [{{contr-w :w
-          contr-d :d
-          wall :wall} :controller} config]
-    (translate [0 (- wall) 0] (hull (cube contr-w contr-d 5)
-                                    ;; move down to center of controller
-                                    (translate [0 -3 0]
-                                               (cube (+ contr-w 5) (- contr-d 6) 5))))))
 
 (defn plate-layer-lower1 [config]
   (let [power-switch-cutout (translate [17 2 0]
@@ -354,17 +384,7 @@
   (difference (base-outline config)
               (screw-holes config)))
 
-(defn rubber-feet [config]
-  (let [{feet-config :rubber-feet} config]
-    (map (fn [{x :x
-               y :y
-               w :w
-               d :d
-               h :h}]
-           (translate [x y 0]
-                      (color [0.3 0.3 0.3 1]
-                             (cube w d h))))
-         feet-config)))
+
 
 (defn rubber-feet-outline-layer [config]
   (let [{screwhole-cluster :screwholes} config
@@ -378,34 +398,11 @@
                 rubber-feet-indicator
                 screw-indicator)))
 
-(defn foam-outline [config]
-  (hull (mirror-halves (place-at-key-positions config
-                                               (single-key-hole config 0 0)))))
 
-(defn foam-layer [config]
-  (let [{plate-thickness :plate-thickness
-         screwhole-cluster :screwholes} config
-        {strut-radius :strut-radius} screwhole-cluster
-        cutout-switches (place-at-key-positions config (single-key-hole config -4 -4))
-        foam (foam-outline config)
-        cutout-controller (controller-cutout-usbc config)
-        struts-right (place-in-cluster config
-                                       (cylinder strut-radius plate-thickness)
-                                       screwhole-cluster)]
-    (difference
-     foam
-     (scale [1 1 10] (mirror-halves (union
-                                     struts-right
-                                     cutout-controller
-                                     cutout-switches))))))
 
-(defn foam-layer-helper "Lines for engraving the foam with a grid for easier molding"
-  [config]
-  (let [between-switches (place-at-key-positions config (single-key-hole config 2 2))
-        foam (foam-outline config)]
-    (mirror-halves (union
-                    between-switches))))
-
+;; -------------------------------------------------
+;; layer placement
+;; -------------------------------------------------
 
 (defn create-model [config]
   (let [{plate-thickness :plate-thickness} config
@@ -434,10 +431,9 @@
    (translate [-275 -150 0] (plate-layer-upper config))
    (translate [0 -150 0] (plate-layer-lower1 config))
    (translate [275 -150 0] (plate-layer-lower2 config))
-   #_(translate [-275 -300 0] (frame-layer config))
-   #_(translate [0 -300 0] (frame-layer config))
-   #_(translate [275 -300 0] (bottom-layer config))
-   #_(translate [-220 -210 0] (rotate (* PI 3/2) [0 0 1] (plate-layer-upper config)))))
+   (translate [-275 -300 0] (frame-layer config))
+   (translate [0 -300 0] (frame-layer config))
+   (translate [275 -300 0] (bottom-layer config))))
 
 ;; Place layers on a 100x25 cm^2 plywood sheet for space-efficient laser cutting
 (defn optimized-placement [config]

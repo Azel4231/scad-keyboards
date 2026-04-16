@@ -52,8 +52,10 @@
                   :controller {:w 18 :d 21 :h 1.5
                                :usbc-y 1.5 ;; 1.5mm overhang (top of controller)
                                :usbc-z 1.5 ;; 1.5mm upwards (placed on top of pcb)
-                               :wall 3}  ;; xiao-ble ()
-                  :battery {:w 17.5 :d 31 :h 4.3 :wall 3}
+                               :wall 3}  ;; xiao-ble () 
+
+                  :battery {:w 13 :d 31 :h 4.3 :wall 3 :pos [-0.9 0.2]}
+                  ;;:battery {:w 17.5 :d 31 :h 4.3 :wall 3 :pos [-0.9 0.1]}  ;; 150mAh
 
                   :magnets {:additional-positions [[-0.88 2.8]
                                                    [-1.55 0.1]
@@ -62,8 +64,8 @@
                             :radius 3
                             :height 3}
 
-                  :magnets-case {:additional-positions [[2 3.6]
-                                                        [2 -1.2]]
+                  :magnets-case {:additional-positions [[1.9 3.6]
+                                                        [1.9 -1.2]]
                                  :radius 3
                                  :height 3}
 
@@ -309,7 +311,8 @@
                  cutouts-other))))
 
 (defn plate-layer-upper [config]
-  (let [{{{finger-cluster :finger-cluster} :clusters} :matrix} config
+  (let [{{{finger-cluster :finger-cluster} :clusters} :matrix
+         {battery-pos :pos} :battery} config
         controller-cutout (place-in-cluster-single config
                                                    (color [0.4 0.4 0.4 1] (controller-cutout-usbc config))
                                                    finger-cluster
@@ -319,9 +322,7 @@
         battery (place-in-cluster-single config
                                          (color [0.3 0.9 0.3 1] (battery config))
                                          finger-cluster
-                                         [-1 0.1])
-        ;; FIXME remove
-        battery (translate [3 -2 1] battery)
+                                         battery-pos)
         case-magnets (translate [0 0 3] (magnets-case config))]
     (union (difference (plate-layer config
                                     (single-key-hole config 0 0)

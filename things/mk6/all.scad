@@ -998,12 +998,10 @@ projection (cut = false) {
             }
           }
         }
-        translate ([3, -2, 1]) {
-          rotate (a=14.0, v=[0, 0, 1]) {
-            translate ([14.0, -1.0999999999999996, 0]) {
-              color ([0.3, 0.9, 0.3, 1]) {
-                cube ([17.5, 31, 4.3], center=true);
-              }
+        rotate (a=14.0, v=[0, 0, 1]) {
+          translate ([15.899999999999999, 0.8000000000000007, 0]) {
+            color ([0.3, 0.9, 0.3, 1]) {
+              cube ([13, 31, 4.3], center=true);
             }
           }
         }
@@ -1025,12 +1023,12 @@ projection (cut = false) {
         }
         translate ([0, 0, 3]) {
           rotate (a=14.0, v=[0, 0, 1]) {
-            translate ([71.0, 60.400000000000006, 0]) {
+            translate ([69.1, 60.400000000000006, 0]) {
               cylinder ($fa=2, $fn=40, $fs=0.1, h=3, r=3, center=true);
             }
           }
           rotate (a=14.0, v=[0, 0, 1]) {
-            translate ([71.0, -30.8, 0]) {
+            translate ([69.1, -30.8, 0]) {
               cylinder ($fa=2, $fn=40, $fs=0.1, h=3, r=3, center=true);
             }
           }

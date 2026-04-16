@@ -55,26 +55,35 @@
                                :wall 3}  ;; xiao-ble ()
                   :battery {:w 17.5 :d 31 :h 4.3 :wall 3}
 
-                  :magnets {:additional-positions [[4 2.8] [4 -0.7]]
-                            :magnet-radius 3}
+                  :magnets {:additional-positions [[-0.75 2.6]
+                                                   [-1.5 -0.2]
+                                                   [4 2.8]
+                                                   [4 -0.8]]
+                            :radius 3
+                            :height 3}
+
+                  :magnets-case {:additional-positions [[2 2.8]
+                                                        [2 -0.8]]
+                                 :radius 3
+                                 :height 3}
 
                   :battery-cutout {:rows 3
                                    :cols 1
                                    :offset [-19.5 1.5]
                                    :dimensions [14 15]}
 
-                  :matrix {:offset [26 -8]
+                  :matrix {:offset [31 -8]
                            :clusters {:finger-cluster {:rows 3
                                                        :cols 6
                                                        :additional-positions [[1 3]]
-                                                       :offset [5 5]
+                                                       :offset [0 5]
                                                        ;; Split: +2 +8 -4 -10 -1
                                                        ;; MK5:   +3 +8 -5 -10 -3
                                                        ;; MK6: try more pinkey stagger (-11 -2)
                                                        :staggers [[0 0] [0 2] [0 10] [0 6] [0 -5] [0 -7]]}
                                       :thumb-cluster {:rows 1
                                                       :cols 5
-                                                      :offset [-14 -19]
+                                                      :offset [-19 -19]
                                                       :staggers [[0 0] [0 0] [0 0] [0 14] [0 10]]}}}})
 (def default-cluster {:rows 0
                       :cols 0
@@ -197,12 +206,21 @@
   (union (controller-cutout config)
          (usb-c-cutout config)))
 
-(defn magnet-cutouts [config]
+(defn magnets [config]
   (let [{magnet-cluster :magnets} config
-        {radius :magnet-radius} magnet-cluster]
-    (mirror-halves (place-in-cluster config
-                                     (cylinder radius 10)
-                                     magnet-cluster))))
+        {radius :radius
+         height :height} magnet-cluster]
+    (place-in-cluster config
+                      (cylinder radius height)
+                      magnet-cluster)))
+
+(defn magnets-case [config]
+  (let [{magnet-cluster :magnets-case} config
+        {radius :radius
+         height :height} magnet-cluster]
+    (place-in-cluster config
+                         (cylinder radius height)
+                         magnet-cluster)))
 
 (defn battery [config]
   (let [{{w :w
@@ -299,22 +317,14 @@
                                          [-1 0.1])
         ;; FIXME remove
         battery (translate [3 -2 1] battery)
-        magnets (->> [[-0.75 2.6]
-                      [-1.5 -0.2]
-                      [4 2.8]
-                      [4 -0.8]]
-                     (map (partial place-in-cluster-single config
-                                   (color [0.7 0.7 0.7 1] (cylinder 3 3))
-                                   finger-cluster))
-                     (apply union))
-        magnets (translate [0 0 3] magnets)]
+        case-magnets (translate [0 0 3] (magnets-case config))]
     (union (difference (plate-layer config
                                     (single-key-hole config 0 0)
                                     controller-cutout)
-                       (magnet-cutouts config))
+                       (magnets config))
            battery
            controller-cutout
-           magnets)))
+           case-magnets)))
 
 
 (defn plate-layer-lower1 [config]
@@ -327,7 +337,7 @@
                              (union power-switch-cutout
                                     cutout-controller
                                     cutout-usb-c))
-                (magnet-cutouts config))))
+                (magnets config))))
 
 (defn plate-layer-lower2 [config]
   (let [power-switch-cutout (translate [17 -3 0]
@@ -341,16 +351,13 @@
 
 (defn frame-layer [config]
   (let [base-outline (base-outline config)
-        cutout-right (apply hull (place-at-key-positions config (single-key-hole config 0 0)))
-        cutout (hull (mirror-halves cutout-right))
+        cutout (apply hull (place-at-key-positions config (single-key-hole config 0 0))) 
         cutout-controller (translate [0 65 0] (cube 28 30 5))
-        cutout-switch (translate [18 75 0] (cube 12 8 5))
-        cutout-reset (translate [-18 75 0] (cube 10 8 5))]
+        cutout-switch (translate [18 75 0] (cube 12 8 5))]
     (difference base-outline
-                (mirror-halves cutout)
+                cutout
                 cutout-controller
-                cutout-switch
-                cutout-reset)))
+                cutout-switch)))
 
 (defn bottom-layer [config]
   (base-outline config))

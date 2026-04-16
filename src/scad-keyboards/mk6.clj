@@ -23,8 +23,8 @@
                   ;; cutout for each keycap is key-distance + keycap-kerf
                   :keycap-kerf 0.75
                   :plate-thickness 1.5
-                  ;; initially 3.5, 4.5 to make more room for laser kerf
-                  :plate-border 4.5
+                  ;; initially 3.5, make more room for errors
+                  :plate-border {:top 4.5 :bottom 4.5 :inner 6 :outer 4.5}
                   :keycap-dimensions {:x 18 :y 18 :z 10}
                   ;; 86 to avoid holes between top and plate layer
                   :top {:y 86 :width 26}
@@ -57,13 +57,13 @@
 
                   :magnets {:additional-positions [[-0.75 2.6]
                                                    [-1.5 -0.2]
-                                                   [4 2.8]
-                                                   [4 -0.8]]
+                                                   [4.2 2.8]
+                                                   [4.2 -0.8]]
                             :radius 3
                             :height 3}
 
-                  :magnets-case {:additional-positions [[2 2.8]
-                                                        [2 -0.8]]
+                  :magnets-case {:additional-positions [[2 3.6]
+                                                        [2 -1.2]]
                                  :radius 3
                                  :height 3}
 
@@ -72,7 +72,7 @@
                                    :offset [-19.5 1.5]
                                    :dimensions [14 15]}
 
-                  :matrix {:offset [31 -8]
+                  :matrix {:offset [33 -8]
                            :clusters {:finger-cluster {:rows 3
                                                        :cols 6
                                                        :additional-positions [[1 3]]
@@ -256,22 +256,24 @@
 
 (defn base-outline [config]
   (let [{plate-thickness :plate-thickness
-         plate-border :plate-border
+         {top :top bottom :bottom inner :inner outer :outer} :plate-border
          {cap-x :x
           cap-y :y} :keycap-dimensions
          {{finger-cluster :finger-cluster
            thumb-cluster :thumb-cluster} :clusters} :matrix} config
-        ;; make upper edge parallel to bottom, by matching the y of the topmost key which means using the stagger of the second column
-        top-cluster (assoc-in finger-cluster [:staggers 0]
-                              (get-in finger-cluster [:staggers 1]))
-        key-helper (cube (+ cap-x (* 2 plate-border))
-                         (+ cap-y (* 2 plate-border))
-                         plate-thickness)
+        border-helper (translate [(/ (- outer inner) 2) (/ (- bottom top) 3) 0]
+                                 (cube (+ cap-x inner outer)
+                                       (+ cap-y top bottom)
+                                       plate-thickness))
+        bottom-helper (place-in-cluster-single config border-helper thumb-cluster [0 1])
+        ;; align x with innermost thumb key (move the helper two units inward, see also comment below)
+        top-border-helper (translate [-38 0 0] border-helper)
+        ;; align y with topmost key ([1 3]) and its stagger
+        top-helper (place-in-cluster-single config top-border-helper finger-cluster [1 3])
         ;;controller-helper (controller-cutout config plate-thickness)
         ;;mirror-top-helper (top-aligned-cube config top-width 0.01 plate-thickness)
-        bottom-helper (place-in-cluster-single config key-helper thumb-cluster [0 1])
-        top-helper (place-in-cluster-single config key-helper top-cluster [0 3])]
-    (->> key-helper
+        ]
+    (->> border-helper
          (place-at-key-positions config)
          #_(cons controller-helper)
          (cons top-helper)
@@ -291,7 +293,10 @@
         cap-cutouts (place-at-key-positions config
                                             (cube (+ cap-x (* 2 kerf))
                                                   (+ cap-y (* 2 kerf))
-                                                  25))]
+                                                  25))
+        ;; TODO remove
+        cap-cutouts (union cap-cutouts (magnets config))
+        ]
     (difference base-outline
                 (mirror-halves cap-cutouts))))
 

@@ -6,7 +6,7 @@
  (ns scad-keyboards.mk6
    (:refer-clojure :exclude [use import])
    (:require [scad-clj.scad :refer [write-scad]]
-             [scad-clj.model :refer [translate rotate scale intersection union hull difference cube color mirror cylinder project minkowski]]))
+             [scad-clj.model :as scad :refer [translate rotate scale union hull difference cube sphere color mirror cylinder project minkowski]]))
 
 (def PI Math/PI)
 
@@ -53,25 +53,28 @@
                                :usbc-y 1.5 ;; 1.5mm overhang (top of controller)
                                :usbc-z 1.5 ;; 1.5mm upwards (placed on top of pcb)
                                :wall 3}  ;; xiao-ble () 
-                  
-                  :battery {:additional-positions [[-0.9 0.3]]
-                            :w 13 
-                            :d 31 
-                            :h 4.3}
+
+                  :battery {:additional-positions [[-0.9 0.35]]
+                            :w 13
+                            :d 31
+                            :h 4.3
+                            :margin 1}
                   ;;:battery {:w 17.5 :d 31 :h 4.3 :wall 3 :pos [-0.9 0.1]}  ;; 150mAh
-                  
+
                   :magnets {:additional-positions [[-0.88 2.8]
                                                    [-1.55 0.1]
                                                    [4.2 2.8]
                                                    [4.2 -0.8]]
                             :radius 3
-                            :height 3}
+                            :height 3
+                            :margin 3}
 
                   :magnets-case {:additional-positions [[1.9 3.6]
                                                         [1.9 -1.2]]
                                  :radius 3
-                                 :height 3}
-                  
+                                 :height 3
+                                 :margin 3}
+
                   :matrix {:offset [33 -8]
                            :clusters {:finger-cluster {:rows 3
                                                        :cols 6
@@ -210,23 +213,49 @@
   (let [{magnet-cluster :magnets} config
         {radius :radius
          height :height} magnet-cluster]
-    (place-in-cluster config
-                      (cylinder radius height)
-                      magnet-cluster)))
+    (apply union (place-in-cluster config
+                                   (cylinder radius height)
+                                   magnet-cluster))))
 
 (defn magnets-case [config]
   (let [{magnet-cluster :magnets-case} config
         {radius :radius
          height :height} magnet-cluster]
-    (place-in-cluster config
-                         (cylinder radius height)
-                         magnet-cluster)))
+    (apply union (place-in-cluster config
+                                   (cylinder radius height)
+                                   magnet-cluster))))
+
+(defn magnets-struts [config]
+  (let [{magnet-cluster :magnets} config
+        {radius :radius
+         height :height
+         margin :margin} magnet-cluster]
+    (apply union (place-in-cluster config
+                                   (cylinder (+ radius margin) height)
+                                   magnet-cluster))))
+
+(defn magnets-case-struts [config]
+  (let [{magnet-cluster :magnets-case} config
+        {radius :radius
+         height :height
+         margin :margin} magnet-cluster]
+    (apply union (place-in-cluster config
+                                   (cylinder (+ radius margin) height)
+                                   magnet-cluster))))
+
 
 (defn battery [config]
   (let [{{w :w
           d :d
           h :h} :battery} config]
     (cube w d h)))
+
+(defn battery-cutout [config]
+  (let [{{w :w
+          d :d
+          h :h
+          margin :margin} :battery} config]
+    (cube (+ w margin) (+ d margin) h)))
 
 (defn cutout-controller-wires [config]
   (let [{{contr-w :w
@@ -275,7 +304,6 @@
         ]
     (->> border-helper
          (place-at-key-positions config)
-         #_(cons controller-helper)
          (cons top-helper)
          (cons bottom-helper)
          (apply hull)
@@ -300,7 +328,7 @@
 
 (defn plate-layer [config cutout-switch cutouts-other]
   (let [base-outline (base-outline config)
-        cutouts (mirror-halves (place-at-key-positions config cutout-switch))]
+        cutouts (place-at-key-positions config cutout-switch)]
     (union
      (difference base-outline
                  cutouts
@@ -318,50 +346,58 @@
         battery (place-in-cluster config
                                   (color [0.3 0.9 0.3 1] (battery config))
                                   battery-cluster)
-        case-magnets (translate [0 0 3] (magnets-case config))]
+        ]
     (union (difference (plate-layer config
                                     (single-key-hole config 0 0)
                                     controller-cutout)
                        (magnets config))
            battery
-           controller-cutout
-           case-magnets)))
+           controller-cutout)))
 
 
 (defn plate-layer-lower1 [config]
   (let [power-switch-cutout (translate [17 2 0]
                                        (cube 7.2 10 5))
         cutout-controller (cutout-controller-wires config)
-        cutout-usb-c (usb-c-cutout config)]
+        cutout-usb-c (usb-c-cutout config) 
+        magnet-cutouts (magnets config)
+        case-magnet-cutouts (magnets-case config)
+        ]
     (difference (plate-layer config
                              (single-key-hole config 0 1.2)
-                             (union ;;power-switch-cutout
-                                    ;;cutout-controller
-                                    ;;cutout-usb-c
+                             (union magnet-cutouts
+                                    case-magnet-cutouts
                                     ))
                 (magnets config))))
 
 (defn plate-layer-lower2 [config]
   (let [{battery-cluster :battery} config
         battery-cutout (place-in-cluster config
-                                         (color [0.3 0.9 0.3 1] (scale [1.1 1 1.1] (battery config)))
-                                         battery-cluster)]
+                                         (color [0.3 0.9 0.3 1] (scale [1.1 1 1.1] (battery-cutout config)))
+                                         battery-cluster) 
+        case-magnet-cutouts (magnets-case config)
+        ]
     (plate-layer config
                  (single-key-hole config -0.5 -0.5)
-                 battery-cutout)))
+                 (union battery-cutout
+                        case-magnet-cutouts))))
 
 
 (defn frame-layer [config]
   (let [base-outline (base-outline config)
         ;; TODO add controller and battery
         cutout (apply hull (place-at-key-positions config (single-key-hole config 0 0)))
-        cutout-controller (translate [0 65 0] (cube 28 30 5))
-        cutout-switch (translate [18 75 0] (cube 12 8 5))]
-    (difference base-outline
-                cutout
-                ;;cutout-controller
-                ;;cutout-switch
-                )))
+        magnets-cutouts (magnets config)
+        case-magnet-cutouts (magnets-case config) 
+        magnets-struts (scad/intersection base-outline (magnets-struts config))
+        case-struts (scad/intersection base-outline (magnets-case-struts config))
+        ]
+    (-> base-outline
+        (difference cutout)
+        (union case-struts)
+        (union magnets-struts)
+        (difference magnets-cutouts case-magnet-cutouts)
+        )))
 
 (defn bottom-layer [config]
   (base-outline config))

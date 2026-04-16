@@ -55,8 +55,8 @@
                                :wall 3}  ;; xiao-ble ()
                   :battery {:w 17.5 :d 31 :h 4.3 :wall 3}
 
-                  :magnets {:additional-positions [[-0.75 2.6]
-                                                   [-1.5 -0.2]
+                  :magnets {:additional-positions [[-0.88 2.8]
+                                                   [-1.55 0.1]
                                                    [4.2 2.8]
                                                    [4.2 -0.8]]
                             :radius 3
@@ -433,7 +433,7 @@
      (translate [x-dist  (- y-dist 70) 0]
                 (union
                  ;; move 5mm inwards
-                 (translate [(+ (* -1 x-dist) 5) 0 0] (frame-layer-half config))
+                 (translate [(+ (* -1 x-dist) 5) 0 0] (frame-layer config))
                  (translate [(* 0 x-dist) 0 0] (top-layer config))
                  (translate [(* 1 x-dist) 0 0] (bottom-layer config))
                  (translate [(* 2 x-dist) 0 0] (mirror [1 0 0] (frame-layer config)))
@@ -444,7 +444,7 @@
                             (translate [(* 0 x-dist) 0 0] (mirror [1 0 0] (plate-layer-lower1 config)))
                             (translate [(* 1 x-dist) 0 0] (mirror [1 0 0] (plate-layer-lower2 config)))
                             ;; move 5mm inwards
-                            (translate [(+ (* 2 x-dist) -5) 0 0]  (mirror [1 0 0] (frame-layer-half config)))))))))
+                            (translate [(+ (* 2 x-dist) -5) 0 0]  (mirror [1 0 0] (frame-layer config)))))))))
 
 
 (defn create-multi-model [config]

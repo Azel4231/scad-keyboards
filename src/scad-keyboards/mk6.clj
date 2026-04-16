@@ -53,10 +53,13 @@
                                :usbc-y 1.5 ;; 1.5mm overhang (top of controller)
                                :usbc-z 1.5 ;; 1.5mm upwards (placed on top of pcb)
                                :wall 3}  ;; xiao-ble () 
-
-                  :battery {:w 13 :d 31 :h 4.3 :wall 3 :pos [-0.9 0.2]}
+                  
+                  :battery {:additional-positions [[-0.9 0.3]]
+                            :w 13 
+                            :d 31 
+                            :h 4.3}
                   ;;:battery {:w 17.5 :d 31 :h 4.3 :wall 3 :pos [-0.9 0.1]}  ;; 150mAh
-
+                  
                   :magnets {:additional-positions [[-0.88 2.8]
                                                    [-1.55 0.1]
                                                    [4.2 2.8]
@@ -68,12 +71,7 @@
                                                         [1.9 -1.2]]
                                  :radius 3
                                  :height 3}
-
-                  :battery-cutout {:rows 3
-                                   :cols 1
-                                   :offset [-19.5 1.5]
-                                   :dimensions [14 15]}
-
+                  
                   :matrix {:offset [33 -8]
                            :clusters {:finger-cluster {:rows 3
                                                        :cols 6
@@ -296,8 +294,6 @@
                                             (cube (+ cap-x (* 2 kerf))
                                                   (+ cap-y (* 2 kerf))
                                                   25))
-        ;; TODO remove
-        cap-cutouts (union cap-cutouts (magnets config))
         ]
     (difference base-outline
                 (mirror-halves cap-cutouts))))
@@ -312,17 +308,16 @@
 
 (defn plate-layer-upper [config]
   (let [{{{finger-cluster :finger-cluster} :clusters} :matrix
-         {battery-pos :pos} :battery} config
+         battery-cluster :battery} config
         controller-cutout (place-in-cluster-single config
                                                    (color [0.4 0.4 0.4 1] (controller-cutout-usbc config))
                                                    finger-cluster
                                                    [0 3])
         ;; FIXME remove
         controller-cutout (translate [-1 2 0] controller-cutout)
-        battery (place-in-cluster-single config
-                                         (color [0.3 0.9 0.3 1] (battery config))
-                                         finger-cluster
-                                         battery-pos)
+        battery (place-in-cluster config
+                                  (color [0.3 0.9 0.3 1] (battery config))
+                                  battery-cluster)
         case-magnets (translate [0 0 3] (magnets-case config))]
     (union (difference (plate-layer config
                                     (single-key-hole config 0 0)
@@ -340,30 +335,33 @@
         cutout-usb-c (usb-c-cutout config)]
     (difference (plate-layer config
                              (single-key-hole config 0 1.2)
-                             (union power-switch-cutout
-                                    cutout-controller
-                                    cutout-usb-c))
+                             (union ;;power-switch-cutout
+                                    ;;cutout-controller
+                                    ;;cutout-usb-c
+                                    ))
                 (magnets config))))
 
 (defn plate-layer-lower2 [config]
-  (let [power-switch-cutout (translate [17 -3 0]
-                                       (cube 7.2 5 5))
-        cutout-controller (cutout-controller-wires config)]
+  (let [{battery-cluster :battery} config
+        battery-cutout (place-in-cluster config
+                                         (color [0.3 0.9 0.3 1] (scale [1.1 1 1.1] (battery config)))
+                                         battery-cluster)]
     (plate-layer config
                  (single-key-hole config -0.5 -0.5)
-                 (union power-switch-cutout
-                        cutout-controller))))
+                 battery-cutout)))
 
 
 (defn frame-layer [config]
   (let [base-outline (base-outline config)
-        cutout (apply hull (place-at-key-positions config (single-key-hole config 0 0))) 
+        ;; TODO add controller and battery
+        cutout (apply hull (place-at-key-positions config (single-key-hole config 0 0)))
         cutout-controller (translate [0 65 0] (cube 28 30 5))
         cutout-switch (translate [18 75 0] (cube 12 8 5))]
     (difference base-outline
                 cutout
-                cutout-controller
-                cutout-switch)))
+                ;;cutout-controller
+                ;;cutout-switch
+                )))
 
 (defn bottom-layer [config]
   (base-outline config))

@@ -6,7 +6,7 @@
  (ns scad-keyboards.mk6
    (:refer-clojure :exclude [use import])
    (:require [scad-clj.scad :refer [write-scad]]
-             [scad-clj.model :as scad :refer [translate rotate scale union hull difference cube sphere color mirror cylinder project minkowski]]))
+             [scad-clj.model :as scad :refer [translate rotate scale union hull difference cube color mirror cylinder project]]))
 
 (def PI Math/PI)
 
@@ -26,9 +26,7 @@
                   ;; initially 3.5, make more room for errors
                   :plate-border {:top 4.5 :bottom 4.5 :inner 6 :outer 4.5}
                   :keycap-dimensions {:x 18 :y 18 :z 10}
-                  ;; 86 to avoid holes between top and plate layer
-                  :top {:y 86 :width 26}
-
+                  
                   ;; Rubber feet dimensions that match the MacBook Pro keyboard (ISO-DE):
                   ;; The top feet are aligned horizontally and located in the gap between F-keys and number-row (thus x-distance between them can be arbitrary but less than 270mm).
                   ;; The bottom feet are oriented vertically and located in the the gaps between option+command (left) and command+option (right), x-distance = 141.5 mm.
@@ -257,7 +255,6 @@
                                    (cylinder (+ radius margin) height)
                                    magnet-cluster))))
 
-
 (defn battery [config]
   (let [{battery-cluster :battery
          {w :w
@@ -302,7 +299,7 @@
           cap-y :y} :keycap-dimensions
          {{finger-cluster :finger-cluster
            thumb-cluster :thumb-cluster} :clusters} :matrix} config
-        border-helper (translate [(/ (- outer inner) 2) (/ (- bottom top) 3) 0]
+        border-helper (translate [(/ (- outer inner) 2) (/ (- bottom top) 2) 0]
                                  (cube (+ cap-x inner outer)
                                        (+ cap-y top bottom)
                                        plate-thickness))
@@ -429,41 +426,50 @@
 
 (defn create-model [config]
   (let [{plate-thickness :plate-thickness} config
-        keycaps (mirror-halves (place-at-key-positions config (keycap config)))
+        keycaps (place-at-key-positions config (keycap config))
         explode 1
-        layers [#_keycaps
-                (battery config)
-                (controller-cutout config)
+        layers [keycaps
+                ;;(battery config)
+                ;;(controller-cutout config)
                 (top-layer config)
                 (plate-layer-upper config)
                 (plate-layer-lower1 config)
                 (plate-layer-lower2 config)
                 (frame-layer config)
                 (frame-layer config)
-                ;;(bottom-layer config)
-                (rubber-feet config)]]
-    (union
-     (->> layers
-          (map-indexed (fn [idx layer]
-                         (translate [0 0 (- (* idx plate-thickness explode))]
-                                    layer)))))))
+                (bottom-layer config)
+                (rubber-feet config)]
+        right-half (union
+                    (->> layers
+                         (map-indexed (fn [idx layer]
+                                        (translate [0 0 (- (* idx plate-thickness explode))]
+                                                   layer)))))]
+    (mirror-halves right-half)
+    ))
 
 (defn all-layers [config]
-  (union
-   ;; Helper layer. Not intended for cutting holes anywhere, just to provide the tool path for engraving the rubber feet positions onto the bottom layer. The layer outline is there to help with alignment. 
-   #_(translate [275 0 0] (rubber-feet-outline-layer config))
-   (translate [-275 0 0] (top-layer config))
-   (translate [-275 -150 0] (plate-layer-upper config))
-   (translate [0 -150 0] (plate-layer-lower1 config))
-   (translate [275 -150 0] (plate-layer-lower2 config))
-   (translate [-275 -300 0] (frame-layer config))
-   (translate [0 -300 0] (frame-layer config))
-   (translate [275 -300 0] (bottom-layer config))))
+  (let [x 290
+        y 130
+        layers [[top-layer [(- x) 0 0]]
+                [plate-layer-upper [(- x) (- y) 0]]
+                [plate-layer-lower1 [0 (- y) 0]]
+                [plate-layer-lower2 [x (- y) 0]]
+                [frame-layer [(- x) (- (* 2 y)) 0]]
+                [frame-layer [0 (- (* 2 y)) 0]]
+                [bottom-layer [x (- (* 2 y)) 0]]
+                ;; Helper layer. Not intended for cutting holes anywhere, just to provide the tool path for engraving the rubber feet positions onto the bottom layer. The layer outline is there to help with alignment. 
+                ;; rubber-feet-outline-layer [x 0 0]
+                ] 
+        ]
+    (union
+     (map (fn [[layer-fn transform]]
+            (translate transform (mirror-halves (layer-fn config))))
+          layers))))
 
 ;; Place layers on a 100x25 cm^2 plywood sheet for space-efficient laser cutting
 (defn optimized-placement [config]
   ;; move to origin
-  (let [{{top :y} :top} config
+  (let [top 86
         x-dist (* 2 (+ 115 27.5))
         y-dist (+ top 28)]
     (union

@@ -53,9 +53,9 @@
                                :usbc-z 1.5 ;; 1.5mm upwards (placed on top of pcb)
                                :wall 3}  ;; xiao-ble
                   
-                  :battery {:additional-positions [[-0.9 0.46]]
+                  :battery {:additional-positions [[-0.9 0.42]]
                             :w 13
-                            :d 34  ;; battery itself 31
+                            :d 31
                             :h 4.3
                             :margin 1}
                   ;;:battery {:w 17.5 :d 31 :h 4.3 :wall 3 :pos [-0.9 0.1]}  ;; 150mAh
@@ -68,7 +68,7 @@
                                                    [4.2 -0.8]]
                             :radius 3
                             :height 3
-                            :margin 3}
+                            :margin 3} 
 
                   :magnets-case {:additional-positions [[1.9 3.6]
                                                         [1.9 -1.2]]
@@ -271,9 +271,13 @@
          {w :w
           d :d
           h :h
-          margin :margin} :battery} config]
+          margin :margin} :battery} config
+        battery (cube (+ w margin) (+ d margin) h)
+        battery-cutout (hull battery 
+                             (translate [(/ w 4)] ;; align right
+                                        (cube (/ w 2) (/ d 2) h)))]
     (place-in-cluster config
-                      (color [0.3 0.9 0.3 1] (cube (+ w margin) (+ d margin) h))
+                      (color [0.3 0.9 0.3 1] battery-cutout)
                       battery-cluster)))
 
 (defn rubber-feet [config]

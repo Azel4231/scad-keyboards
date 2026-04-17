@@ -2740,9 +2740,14 @@ projection (cut = false) {
                   }
                   union () {
                     rotate (a=14.0, v=[0, 0, 1]) {
-                      translate ([15.899999999999999, 0.7400000000000002, 0]) {
+                      translate ([15.899999999999999, -0.020000000000000462, 0]) {
                         color ([0.3, 0.9, 0.3, 1]) {
-                          cube ([14, 35, 4.3], center=true);
+                          hull () {
+                            cube ([14, 32, 4.3], center=true);
+                            translate ([13/4, 93/4, 0]) {
+                              cube ([13/2, 31/2, 4.3], center=true);
+                            }
+                          }
                         }
                       }
                     }
@@ -3095,9 +3100,14 @@ projection (cut = false) {
                     }
                     union () {
                       rotate (a=14.0, v=[0, 0, 1]) {
-                        translate ([15.899999999999999, 0.7400000000000002, 0]) {
+                        translate ([15.899999999999999, -0.020000000000000462, 0]) {
                           color ([0.3, 0.9, 0.3, 1]) {
-                            cube ([14, 35, 4.3], center=true);
+                            hull () {
+                              cube ([14, 32, 4.3], center=true);
+                              translate ([13/4, 93/4, 0]) {
+                                cube ([13/2, 31/2, 4.3], center=true);
+                              }
+                            }
                           }
                         }
                       }
@@ -3458,9 +3468,14 @@ projection (cut = false) {
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
-                          translate ([15.899999999999999, 0.7400000000000002, 0]) {
+                          translate ([15.899999999999999, -0.020000000000000462, 0]) {
                             color ([0.3, 0.9, 0.3, 1]) {
-                              cube ([14, 35, 4.3], center=true);
+                              hull () {
+                                cube ([14, 32, 4.3], center=true);
+                                translate ([13/4, 93/4, 0]) {
+                                  cube ([13/2, 31/2, 4.3], center=true);
+                                }
+                              }
                             }
                           }
                         }
@@ -3902,9 +3917,14 @@ projection (cut = false) {
                       }
                     }
                     rotate (a=14.0, v=[0, 0, 1]) {
-                      translate ([15.899999999999999, 0.7400000000000002, 0]) {
+                      translate ([15.899999999999999, -0.020000000000000462, 0]) {
                         color ([0.3, 0.9, 0.3, 1]) {
-                          cube ([14, 35, 4.3], center=true);
+                          hull () {
+                            cube ([14, 32, 4.3], center=true);
+                            translate ([13/4, 93/4, 0]) {
+                              cube ([13/2, 31/2, 4.3], center=true);
+                            }
+                          }
                         }
                       }
                     }
@@ -4283,9 +4303,14 @@ projection (cut = false) {
                             }
                           }
                           rotate (a=14.0, v=[0, 0, 1]) {
-                            translate ([15.899999999999999, 0.7400000000000002, 0]) {
+                            translate ([15.899999999999999, -0.020000000000000462, 0]) {
                               color ([0.3, 0.9, 0.3, 1]) {
-                                cube ([14, 35, 4.3], center=true);
+                                hull () {
+                                  cube ([14, 32, 4.3], center=true);
+                                  translate ([13/4, 93/4, 0]) {
+                                    cube ([13/2, 31/2, 4.3], center=true);
+                                  }
+                                }
                               }
                             }
                           }
@@ -4727,9 +4752,14 @@ projection (cut = false) {
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
-                        translate ([15.899999999999999, 0.7400000000000002, 0]) {
+                        translate ([15.899999999999999, -0.020000000000000462, 0]) {
                           color ([0.3, 0.9, 0.3, 1]) {
-                            cube ([14, 35, 4.3], center=true);
+                            hull () {
+                              cube ([14, 32, 4.3], center=true);
+                              translate ([13/4, 93/4, 0]) {
+                                cube ([13/2, 31/2, 4.3], center=true);
+                              }
+                            }
                           }
                         }
                       }
@@ -5112,9 +5142,14 @@ projection (cut = false) {
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
-                          translate ([15.899999999999999, 0.7400000000000002, 0]) {
+                          translate ([15.899999999999999, -0.020000000000000462, 0]) {
                             color ([0.3, 0.9, 0.3, 1]) {
-                              cube ([14, 35, 4.3], center=true);
+                              hull () {
+                                cube ([14, 32, 4.3], center=true);
+                                translate ([13/4, 93/4, 0]) {
+                                  cube ([13/2, 31/2, 4.3], center=true);
+                                }
+                              }
                             }
                           }
                         }
@@ -5556,9 +5591,14 @@ projection (cut = false) {
                       }
                     }
                     rotate (a=14.0, v=[0, 0, 1]) {
-                      translate ([15.899999999999999, 0.7400000000000002, 0]) {
+                      translate ([15.899999999999999, -0.020000000000000462, 0]) {
                         color ([0.3, 0.9, 0.3, 1]) {
-                          cube ([14, 35, 4.3], center=true);
+                          hull () {
+                            cube ([14, 32, 4.3], center=true);
+                            translate ([13/4, 93/4, 0]) {
+                              cube ([13/2, 31/2, 4.3], center=true);
+                            }
+                          }
                         }
                       }
                     }
@@ -5937,9 +5977,14 @@ projection (cut = false) {
                             }
                           }
                           rotate (a=14.0, v=[0, 0, 1]) {
-                            translate ([15.899999999999999, 0.7400000000000002, 0]) {
+                            translate ([15.899999999999999, -0.020000000000000462, 0]) {
                               color ([0.3, 0.9, 0.3, 1]) {
-                                cube ([14, 35, 4.3], center=true);
+                                hull () {
+                                  cube ([14, 32, 4.3], center=true);
+                                  translate ([13/4, 93/4, 0]) {
+                                    cube ([13/2, 31/2, 4.3], center=true);
+                                  }
+                                }
                               }
                             }
                           }
@@ -6381,9 +6426,14 @@ projection (cut = false) {
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
-                        translate ([15.899999999999999, 0.7400000000000002, 0]) {
+                        translate ([15.899999999999999, -0.020000000000000462, 0]) {
                           color ([0.3, 0.9, 0.3, 1]) {
-                            cube ([14, 35, 4.3], center=true);
+                            hull () {
+                              cube ([14, 32, 4.3], center=true);
+                              translate ([13/4, 93/4, 0]) {
+                                cube ([13/2, 31/2, 4.3], center=true);
+                              }
+                            }
                           }
                         }
                       }

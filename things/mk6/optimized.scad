@@ -567,15 +567,15 @@ projection (cut = false) {
                       }
                     }
                     rotate (a=14.0, v=[0, 0, 1]) {
-                      translate ([15.899999999999999, -1.3500000000000005, 0]) {
+                      translate ([15.899999999999999, 0.7400000000000002, 0]) {
                         color ([0.3, 0.9, 0.3, 1]) {
-                          cube ([14, 32, 4.3], center=true);
+                          cube ([14, 35, 4.3], center=true);
                         }
                       }
                     }
                     rotate (a=14.0, v=[0, 0, 1]) {
                       translate ([31.1, 56.22, 0]) {
-                        cube ([18, 21, 5], center=true);
+                        cube ([17.2, 21, 5], center=true);
                       }
                     }
                   }
@@ -1011,15 +1011,15 @@ projection (cut = false) {
                   }
                 }
                 rotate (a=14.0, v=[0, 0, 1]) {
-                  translate ([15.899999999999999, -1.3500000000000005, 0]) {
+                  translate ([15.899999999999999, 0.7400000000000002, 0]) {
                     color ([0.3, 0.9, 0.3, 1]) {
-                      cube ([14, 32, 4.3], center=true);
+                      cube ([14, 35, 4.3], center=true);
                     }
                   }
                 }
                 rotate (a=14.0, v=[0, 0, 1]) {
                   translate ([31.1, 56.22, 0]) {
-                    cube ([18, 21, 5], center=true);
+                    cube ([17.2, 21, 5], center=true);
                   }
                 }
               }
@@ -2039,15 +2039,15 @@ projection (cut = false) {
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
-                        translate ([15.899999999999999, -1.3500000000000005, 0]) {
+                        translate ([15.899999999999999, 0.7400000000000002, 0]) {
                           color ([0.3, 0.9, 0.3, 1]) {
-                            cube ([14, 32, 4.3], center=true);
+                            cube ([14, 35, 4.3], center=true);
                           }
                         }
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([31.1, 56.22, 0]) {
-                          cube ([18, 21, 5], center=true);
+                          cube ([17.2, 21, 5], center=true);
                         }
                       }
                     }
@@ -2483,15 +2483,15 @@ projection (cut = false) {
                     }
                   }
                   rotate (a=14.0, v=[0, 0, 1]) {
-                    translate ([15.899999999999999, -1.3500000000000005, 0]) {
+                    translate ([15.899999999999999, 0.7400000000000002, 0]) {
                       color ([0.3, 0.9, 0.3, 1]) {
-                        cube ([14, 32, 4.3], center=true);
+                        cube ([14, 35, 4.3], center=true);
                       }
                     }
                   }
                   rotate (a=14.0, v=[0, 0, 1]) {
                     translate ([31.1, 56.22, 0]) {
-                      cube ([18, 21, 5], center=true);
+                      cube ([17.2, 21, 5], center=true);
                     }
                   }
                 }
@@ -2877,6 +2877,11 @@ projection (cut = false) {
                   }
                 }
               }
+              rotate (a=14.0, v=[0, 0, 1]) {
+                translate ([31.1, 56.22, 0]) {
+                  cube ([17.2, 21, 5], center=true);
+                }
+              }
             }
           }
           translate ([0.0, 0, 0]) {
@@ -3236,8 +3241,11 @@ projection (cut = false) {
                       }
                       rotate (a=14.0, v=[0, 0, 1]) {
                         translate ([31.1, 56.22, 0]) {
-                          cube ([18, 21, 5], center=true);
+                          cube ([17.2, 21, 5], center=true);
                         }
+                      }
+                      translate ([3, 35, 0]) {
+                        cube ([6, 10, 5], center=true);
                       }
                     }
                   }
@@ -3566,15 +3574,15 @@ projection (cut = false) {
                   }
                   union () {
                     rotate (a=14.0, v=[0, 0, 1]) {
-                      translate ([15.899999999999999, -1.3500000000000005, 0]) {
+                      translate ([15.899999999999999, 0.7400000000000002, 0]) {
                         color ([0.3, 0.9, 0.3, 1]) {
-                          cube ([14, 32, 4.3], center=true);
+                          cube ([14, 35, 4.3], center=true);
                         }
                       }
                     }
                     rotate (a=14.0, v=[0, 0, 1]) {
                       translate ([31.1, 56.22, 0]) {
-                        cube ([18, 21, 5], center=true);
+                        cube ([17.2, 21, 5], center=true);
                       }
                     }
                     union () {
@@ -3919,15 +3927,15 @@ projection (cut = false) {
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
-                          translate ([15.899999999999999, -1.3500000000000005, 0]) {
+                          translate ([15.899999999999999, 0.7400000000000002, 0]) {
                             color ([0.3, 0.9, 0.3, 1]) {
-                              cube ([14, 32, 4.3], center=true);
+                              cube ([14, 35, 4.3], center=true);
                             }
                           }
                         }
                         rotate (a=14.0, v=[0, 0, 1]) {
                           translate ([31.1, 56.22, 0]) {
-                            cube ([18, 21, 5], center=true);
+                            cube ([17.2, 21, 5], center=true);
                           }
                         }
                       }
@@ -4363,15 +4371,15 @@ projection (cut = false) {
                       }
                     }
                     rotate (a=14.0, v=[0, 0, 1]) {
-                      translate ([15.899999999999999, -1.3500000000000005, 0]) {
+                      translate ([15.899999999999999, 0.7400000000000002, 0]) {
                         color ([0.3, 0.9, 0.3, 1]) {
-                          cube ([14, 32, 4.3], center=true);
+                          cube ([14, 35, 4.3], center=true);
                         }
                       }
                     }
                     rotate (a=14.0, v=[0, 0, 1]) {
                       translate ([31.1, 56.22, 0]) {
-                        cube ([18, 21, 5], center=true);
+                        cube ([17.2, 21, 5], center=true);
                       }
                     }
                   }

@@ -49,18 +49,20 @@
                                         :angle 0}
 
                   ;;:controller {:w 18 :d 33.5 :h 3.0 :usbc-y 1.5 :usbc-z 0 :wall 3}  ;; nice!nano
-                  :controller {:additional-positions [[-0.1 3.3]]
-                               :w 18 :d 21 :h 1.5
+                  :controller {:additional-positions [[-0.1 3.38]]
+                               :w 17.2 :d 21 :h 1.5
                                :usbc-y 1.5 ;; 1.5mm overhang (top of controller)
                                :usbc-z 1.5 ;; 1.5mm upwards (placed on top of pcb)
-                               :wall 3}  ;; xiao-ble () 
-
-                  :battery {:additional-positions [[-0.9 0.35]]
+                               :wall 3}  ;; xiao-ble
+                  
+                  :battery {:additional-positions [[-0.9 0.46]]
                             :w 13
-                            :d 31
+                            :d 34  ;; battery itself 31
                             :h 4.3
                             :margin 1}
                   ;;:battery {:w 17.5 :d 31 :h 4.3 :wall 3 :pos [-0.9 0.1]}  ;; 150mAh
+
+                  :power-switch {:w 6 :d 10 :h 1.5 :x 3 :y 35}
 
                   :magnets {:additional-positions [[-0.88 2.8]
                                                    [-1.55 0.1]
@@ -212,6 +214,15 @@
   (union (controller-cutout config)
          (usb-c-cutout config)))
 
+(defn cutout-controller-wires [config]
+  (let [{{contr-w :w
+          contr-d :d
+          wall :wall} :controller} config]
+    (translate [0 (- wall) 0] (hull (cube contr-w contr-d 5)
+                                    ;; move down to center of controller
+                                    (translate [0 -3 0]
+                                               (cube (+ contr-w 5) (- contr-d 6) 5))))))
+
 (defn magnets [config]
   (let [{magnet-cluster :magnets} config
         {radius :radius
@@ -266,14 +277,6 @@
                       (color [0.3 0.9 0.3 1] (cube (+ w margin) (+ d margin) h))
                       battery-cluster)))
 
-(defn cutout-controller-wires [config]
-  (let [{{contr-w :w
-          contr-d :d
-          wall :wall} :controller} config]
-    (translate [0 (- wall) 0] (hull (cube contr-w contr-d 5)
-                                    ;; move down to center of controller
-                                    (translate [0 -3 0]
-                                               (cube (+ contr-w 5) (- contr-d 6) 5))))))
 (defn rubber-feet [config]
   (let [{feet-config :rubber-feet} config]
     (map (fn [{x :x
@@ -344,19 +347,19 @@
                  cutouts-other))))
 
            
-(defn plate-layer-upper [config]
-  (let []
-    (difference (plate-layer config
-                             (single-key-hole config 0 0)
-                             [])
-                (magnets config))))
+(defn plate-layer-upper [config] 
+  (difference (plate-layer config
+                           (single-key-hole config 0 0)
+                           [])
+              (magnets config)
+              (controller-cutout config)))
 
 
 (defn plate-layer-lower1 [config]
-  (let [power-switch-cutout (translate [17 2 0]
-                                       (cube 7.2 10 5))
+  (let [{{w :w d :d x :x y :y} :power-switch} config
+        power-switch-cutout (translate [x y 0]
+                                       (cube w d 5))
         controller-cutout (controller-cutout config)
-        cutout-usb-c (usb-c-cutout config) 
         magnet-cutouts (magnets config)
         case-magnet-cutouts (magnets-case config)
         ]
@@ -365,6 +368,7 @@
                              (union magnet-cutouts
                                     case-magnet-cutouts
                                     controller-cutout
+                                    power-switch-cutout
                                     )))))
 
 (defn plate-layer-lower2 [config]
@@ -436,7 +440,7 @@
                 (plate-layer-lower2 config)
                 (frame-layer config)
                 (frame-layer config)
-                (bottom-layer config)
+                ;;(bottom-layer config)
                 (rubber-feet config)]]
     (union
      (->> layers

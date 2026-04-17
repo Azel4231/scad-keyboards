@@ -26,21 +26,26 @@
                   ;; initially 3.5, make more room for errors
                   :plate-border {:top 5 :bottom 4.5 :inner 6 :outer 4.5}
                   :keycap-dimensions {:x 18 :y 18 :z 10}
-                  
+
                   ;; Rubber feet dimensions that match the MacBook Pro keyboard (ISO-DE):
-                  ;; The top feet are aligned horizontally and located in the gap between F-keys and number-row (thus x-distance between them can be arbitrary but less than 270mm).
-                  ;; The bottom feet are oriented vertically and located in the the gaps between option+command (left) and command+option (right), x-distance = 141.5 mm.
-                  ;; y-distance between top and bottom feet (centers): min 78, max 87 (due to location of the respective gaps (min = 73 max 92) and the length of the bottom feet (10mm)). 
-                  ;; The pair of bottom feet is shifted 6mm to the left (of the keyboard's axis of symmetry). That way the keyboard sits slightly off-center to the left of the laptop keyboard and allows access to the MacBook's touch-id key.
+                  ;; The MacBook Pro keyboard has the following spacings. Horizontal (x): 19mm, vertical (y): 18.5mm. The gap between keys is 2mm.
                   ;; Width of the feet must be less than 2mm at the bottom. A trapezoid cross section is ideal so the top can be wider for more glued surface.
                   ;; Height of the feet must be more than 1.5mm
                   ;; Ideal base material are 10mm x 10mm x 2mm rubber feet, that can then be cut to dimension. This even leaves room for shortening individual feet to eliminate wobble.
-                  :rubber-feet [{:w 10 :d 2 :h 2 :x 112 :y 67}
-                                {:w 10 :d 2 :h 2 :x -112 :y 67}
-                                {:w 2 :d 10 :h 2 :x 67.75 :y -14}
-                                {:w 2 :d 10 :h 2 :x -73.75 :y -13}]
+                  :rubber-feet [;; right
+                                {:w 10 :d 2 :h 2 :x 116 :y 65} ;; between number and F row
+                                {:w 10 :d 2 :h 2 :x 12 :y 65}  ;; vertical distance to bottom feet (64.75mm (3.5 * 18.5mm) and 83.25 (4.5 * 18.5mm))
+                                {:w 2 :d 10 :h 2 :x 101.5 :y 0.25}  ;; between -_ and R-shift
+                                {:w 2 :d 10 :h 2 :x 44.5 :y -18.25} ;; right of spacebar
+
+                                ;; left
+                                {:w 10 :d 2 :h 2 :x -116 :y 65}
+                                {:w 10 :d 2 :h 2 :x -12 :y 65}
+                                {:w 2 :d 10 :h 2 :x -107.5 :y 0.25}  ;; between <> and L-shift, horizontal distance 209.0mm (11 * 19mm)
+                                {:w 2 :d 10 :h 2 :x -50.5 :y -18.25} ;; left of spacebar (horizontal distance 95.0mm (5 * 19mm))
+                                ]
                   :rubber-feet-concept {:positions [[112 70] [-112 70]
-                                                    [67.75 -11] [-73.75 -10]]
+                                                    [67.75 -14] [-73.75 -13]]
                                         :dimensions [[10 2] [10 2]
                                                      [2 10] [2 10]]
                                         :offset [0 0]
@@ -52,7 +57,7 @@
                                :usbc-y 1.5 ;; 1.5mm overhang (top of controller)
                                :usbc-z 1.5 ;; 1.5mm upwards (placed on top of pcb)
                                :wall 3}  ;; xiao-ble
-                  
+
                   :battery {:additional-positions [[-0.9 0.42]]
                             :w 13
                             :d 31
@@ -68,7 +73,7 @@
                                                    [4.2 -0.8]]
                             :radius 3
                             :height 3
-                            :margin 3} 
+                            :margin 3}
 
                   :magnets-case {:additional-positions [[1.9 3.6]
                                                         [1.9 -1.2]]
@@ -274,8 +279,8 @@
           margin :margin} :battery} config
         battery (cube (+ w margin) (+ d margin) h)
         battery-cutout (hull battery 
-                             (translate [(/ w 4)] ;; align right
-                                        (cube (/ w 2) (/ d 2) h)))]
+                             (translate [(* w 1/4) (* d 3/4) 0] ;; align right
+                                        (cube (* w 1/2) (* d 1/2) h)))]
     (place-in-cluster config
                       (color [0.3 0.9 0.3 1] battery-cutout)
                       battery-cluster)))
@@ -413,16 +418,11 @@
 
 
 (defn rubber-feet-outline-layer [config]
-  (let [{screwhole-cluster :screwholes} config
-        layer-outline (base-outline config)
+  (let [layer-outline (base-outline config)
         rubber-feet-indicator (->> (rubber-feet config)
-                                   (scale [1 1 10]))
-        screw-indicator (mirror-halves (place-in-cluster config
-                                                         (cylinder 2 10)
-                                                         screwhole-cluster))]
+                                   (scale [1 1 10]))]
     (difference layer-outline
-                rubber-feet-indicator
-                screw-indicator)))
+                rubber-feet-indicator)))
 
 
 
@@ -434,24 +434,22 @@
   (let [{plate-thickness :plate-thickness} config
         keycaps (place-at-key-positions config (keycap config))
         explode 1
-        layers [keycaps
+        layers [(mirror-halves keycaps)
                 ;;(battery config)
                 ;;(controller-cutout config)
-                (top-layer config)
-                (plate-layer-upper config)
-                (plate-layer-lower1 config)
-                (plate-layer-lower2 config)
-                (frame-layer config)
-                (frame-layer config)
-                (bottom-layer config)
-                (rubber-feet config)]
-        right-half (union
-                    (->> layers
-                         (map-indexed (fn [idx layer]
-                                        (translate [0 0 (- (* idx plate-thickness explode))]
-                                                   layer)))))]
-    (mirror-halves right-half)
-    ))
+                (mirror-halves (top-layer config))
+                (mirror-halves (plate-layer-upper config))
+                (mirror-halves (plate-layer-lower1 config))
+                (mirror-halves (plate-layer-lower2 config))
+                (mirror-halves (frame-layer config))
+                (mirror-halves (frame-layer config))
+                (mirror-halves (bottom-layer config))
+                (rubber-feet config)]]
+    (union
+     (->> layers
+          (map-indexed (fn [idx layer]
+                         (translate [0 0 (- (* idx plate-thickness explode))]
+                                    layer)))))))
 
 (defn all-layers [config]
   (let [x 295

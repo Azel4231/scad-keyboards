@@ -199,46 +199,44 @@ projection (cut = false) {
             }
           }
           scale ([1, 1, 10]) {
-            translate ([112, 67, 0]) {
+            translate ([116, 65, 0]) {
               color ([0.3, 0.3, 0.3, 1]) {
                 cube ([10, 2, 2], center=true);
               }
             }
-            translate ([-112, 67, 0]) {
+            translate ([12, 65, 0]) {
               color ([0.3, 0.3, 0.3, 1]) {
                 cube ([10, 2, 2], center=true);
               }
             }
-            translate ([67.75, -14, 0]) {
+            translate ([101.5, 0.25, 0]) {
               color ([0.3, 0.3, 0.3, 1]) {
                 cube ([2, 10, 2], center=true);
               }
             }
-            translate ([-73.75, -13, 0]) {
+            translate ([44.5, -18.25, 0]) {
               color ([0.3, 0.3, 0.3, 1]) {
                 cube ([2, 10, 2], center=true);
               }
             }
-          }
-          union () {
-            translate ([0, 0, 0]) {
-              difference () {
-                union () {
-                }
-                translate ([-500, 0, 0]) {
-                  cube ([1000, 1000, 1000], center=true);
-                }
+            translate ([-116, 65, 0]) {
+              color ([0.3, 0.3, 0.3, 1]) {
+                cube ([10, 2, 2], center=true);
               }
             }
-            mirror ([1, 0, 0]) {
-              translate ([0, 0, 0]) {
-                difference () {
-                  union () {
-                  }
-                  translate ([-500, 0, 0]) {
-                    cube ([1000, 1000, 1000], center=true);
-                  }
-                }
+            translate ([-12, 65, 0]) {
+              color ([0.3, 0.3, 0.3, 1]) {
+                cube ([10, 2, 2], center=true);
+              }
+            }
+            translate ([-107.5, 0.25, 0]) {
+              color ([0.3, 0.3, 0.3, 1]) {
+                cube ([2, 10, 2], center=true);
+              }
+            }
+            translate ([-50.5, -18.25, 0]) {
+              color ([0.3, 0.3, 0.3, 1]) {
+                cube ([2, 10, 2], center=true);
               }
             }
           }

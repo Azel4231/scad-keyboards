@@ -279,7 +279,7 @@
           margin :margin} :battery} config
         battery (cube (+ w margin) (+ d margin) h)
         battery-cutout (hull battery 
-                             (translate [(* w 1/4) (* d 3/4) 0] ;; align right
+                             (translate [(* w 1/4) (* d 1) 0] ;; align right
                                         (cube (* w 1/2) (* d 1/2) h)))]
     (place-in-cluster config
                       (color [0.3 0.9 0.3 1] battery-cutout)

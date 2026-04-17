@@ -24,7 +24,7 @@
                   :keycap-kerf 0.75
                   :plate-thickness 1.5
                   ;; initially 3.5, make more room for errors
-                  :plate-border {:top 4.5 :bottom 4.5 :inner 6 :outer 4.5}
+                  :plate-border {:top 5 :bottom 4.5 :inner 6 :outer 4.5}
                   :keycap-dimensions {:x 18 :y 18 :z 10}
                   
                   ;; Rubber feet dimensions that match the MacBook Pro keyboard (ISO-DE):
@@ -88,7 +88,7 @@
                                       :thumb-cluster {:rows 1
                                                       :cols 5
                                                       :offset [-19 -19]
-                                                      :staggers [[0 0] [0 0] [0 0] [0 14] [0 10]]}}}})
+                                                      :staggers [[0 0] [0 0] [0 0] [0 13] [0 9]]}}}})
 (def default-cluster {:rows 0
                       :cols 0
                       :additional-positions []
@@ -159,10 +159,12 @@
     (difference (union shape) neg-x)))
 
 (defn mirror-halves "Unions the shape and mirrors it around the y/z plane. Cut off the shape's -x parts before mirroring"
-  [shape]
-  (let [clean-shape (half shape)]
-    (union clean-shape
-           (mirror [1 0 0] clean-shape))))
+  ([shape]
+   (mirror-halves shape 0))
+  ([shape offset]
+   (let [clean-shape (translate [offset 0 0] (half shape))]
+     (union clean-shape
+            (mirror [1 0 0] clean-shape)))))
 
 ;; -------------------------------------------------
 ;; objects
@@ -299,7 +301,7 @@
           cap-y :y} :keycap-dimensions
          {{finger-cluster :finger-cluster
            thumb-cluster :thumb-cluster} :clusters} :matrix} config
-        border-helper (translate [(/ (- outer inner) 2) (/ (- bottom top) 2) 0]
+        border-helper (translate [(/ (- outer inner) 2) (/ (- top bottom) 2) 0]
                                  (cube (+ cap-x inner outer)
                                        (+ cap-y top bottom)
                                        plate-thickness))
@@ -448,8 +450,9 @@
     ))
 
 (defn all-layers [config]
-  (let [x 290
+  (let [x 295
         y 130
+        mirror-offset 2
         layers [[top-layer [(- x) 0 0]]
                 [plate-layer-upper [(- x) (- y) 0]]
                 [plate-layer-lower1 [0 (- y) 0]]
@@ -463,7 +466,7 @@
         ]
     (union
      (map (fn [[layer-fn transform]]
-            (translate transform (mirror-halves (layer-fn config))))
+            (translate transform (mirror-halves (layer-fn config) mirror-offset)))
           layers))))
 
 ;; Place layers on a 100x25 cm^2 plywood sheet for space-efficient laser cutting

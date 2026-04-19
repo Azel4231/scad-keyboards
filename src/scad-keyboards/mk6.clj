@@ -26,11 +26,12 @@
                   ;; initially 3.5, make more room for errors
                   :plate-border {:top 5 :bottom 4.5 :inner 6 :outer 4.5}
                   :keycap-dimensions {:x 18 :y 18 :z 10}
+                  :wood-color [0.98 0.92 0.6 1]
 
                   ;; Rubber feet dimensions that match the MacBook Pro keyboard (ISO-DE):
-                  ;; The MacBook Pro keyboard has the following spacings. Horizontal (x): 19mm, vertical (y): 18.5mm. The gap between keys is 2mm.
-                  ;; Width of the feet must be less than 2mm at the bottom. A trapezoid cross section is ideal so the top can be wider for more glued surface.
-                  ;; Height of the feet must be more than 1.5mm
+                  ;; Horizontal spacing (x): 19mm, vertical spacing (y): 18.5mm. The gap between keys is 2mm.
+                  ;; Width of the feet must be less than 2mm wide at the bottom. A trapezoid cross section is ideal so the top can be wider for more glued surface.
+                  ;; Height of the feet must be more than 1.5mm.
                   ;; Ideal base material are 10mm x 10mm x 2mm rubber feet, that can then be cut to dimension. This even leaves room for shortening individual feet to eliminate wobble.
                   :rubber-feet [;; right
                                 {:w 10 :d 2 :h 2 :x 116 :y 65} ;; between number and F row
@@ -44,12 +45,6 @@
                                 {:w 2 :d 10 :h 2 :x -107.5 :y 0.25}  ;; between <> and L-shift, horizontal distance 209.0mm (11 * 19mm)
                                 {:w 2 :d 10 :h 2 :x -50.5 :y -18.25} ;; left of spacebar (horizontal distance 95.0mm (5 * 19mm))
                                 ]
-                  :rubber-feet-concept {:positions [[112 70] [-112 70]
-                                                    [67.75 -14] [-73.75 -13]]
-                                        :dimensions [[10 2] [10 2]
-                                                     [2 10] [2 10]]
-                                        :offset [0 0]
-                                        :angle 0}
 
                   ;;:controller {:w 18 :d 33.5 :h 3.0 :usbc-y 1.5 :usbc-z 0 :wall 3}  ;; nice!nano
                   :controller {:additional-positions [[-0.1 3.38]]
@@ -58,9 +53,9 @@
                                :usbc-z 1.5 ;; 1.5mm upwards (placed on top of pcb)
                                :wall 3}  ;; xiao-ble
 
-                  :battery {:additional-positions [[-0.9 0.42]]
+                  :battery {:additional-positions [[-0.92 0.42]]
                             :w 13
-                            :d 31
+                            :d 32
                             :h 4.3
                             :margin 1}
                   ;;:battery {:w 17.5 :d 31 :h 4.3 :wall 3 :pos [-0.9 0.1]}  ;; 150mAh
@@ -71,13 +66,13 @@
                                                    [-1.55 0.1]
                                                    [4.2 2.8]
                                                    [4.2 -0.8]]
-                            :radius 3
+                            :radius 2.5
                             :height 3
-                            :margin 3}
+                            :margin 2}
 
-                  :magnets-case {:additional-positions [[1.9 3.6]
-                                                        [1.9 -1.2]]
-                                 :radius 3
+                  :magnets-case {:additional-positions [[1.9 3.65]
+                                                        [1.9 -1.25]]
+                                 :radius 2.5
                                  :height 3
                                  :margin 3}
 
@@ -168,7 +163,7 @@
    (mirror-halves shape 0))
   ([shape offset]
    (let [clean-shape (translate [offset 0 0] (half shape))]
-     (union clean-shape
+     (union clean-shape 
             (mirror [1 0 0] clean-shape)))))
 
 ;; -------------------------------------------------
@@ -309,7 +304,8 @@
          {cap-x :x
           cap-y :y} :keycap-dimensions
          {{finger-cluster :finger-cluster
-           thumb-cluster :thumb-cluster} :clusters} :matrix} config
+           thumb-cluster :thumb-cluster} :clusters} :matrix
+         wood-color :wood-color} config
         border-helper (translate [(/ (- outer inner) 2) (/ (- top bottom) 2) 0]
                                  (cube (+ cap-x inner outer)
                                        (+ cap-y top bottom)
@@ -330,7 +326,7 @@
          #_(minkowski2 (cylinder plate-border 0.01))
          #_(mirror-halves)
          (half)
-         (color [0.98 0.92 0.6 1]))))
+         (color wood-color))))
 
 
 (defn top-layer [config]
@@ -443,7 +439,7 @@
                 (mirror-halves (plate-layer-lower2 config))
                 (mirror-halves (frame-layer config))
                 (mirror-halves (frame-layer config))
-                (mirror-halves (bottom-layer config))
+                ;;(mirror-halves (bottom-layer config))
                 (rubber-feet config)]]
     (union
      (->> layers

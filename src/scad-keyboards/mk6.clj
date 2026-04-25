@@ -24,7 +24,7 @@
                   :keycap-kerf 0.75
                   :plate-thickness 1.5
                   ;; initially 3.5, make more room for errors
-                  :plate-border {:top 5 :bottom 4.5 :inner 6 :outer 4.5}
+                  :plate-border {:top 4.5 :bottom 4.5 :inner 6 :outer 4.5}
                   :keycap-dimensions {:x 18 :y 18 :z 10}
                   :wood-color [0.98 0.92 0.6 1]
 
@@ -38,7 +38,7 @@
                                 {:w 10 :d 2 :h 2 :x 12 :y 65}  ;; vertical distance to bottom feet (64.75mm (3.5 * 18.5mm) and 83.25 (4.5 * 18.5mm))
                                 {:w 2 :d 10 :h 2 :x 101.5 :y 0.25}  ;; between -_ and R-shift
                                 {:w 2 :d 10 :h 2 :x 44.5 :y -18.25} ;; right of spacebar
-
+                                
                                 ;; left
                                 {:w 10 :d 2 :h 2 :x -116 :y 65}
                                 {:w 10 :d 2 :h 2 :x -12 :y 65}
@@ -52,18 +52,18 @@
                                :usbc-y 1.5 ;; 1.5mm overhang (top of controller)
                                :usbc-z 1.5 ;; 1.5mm upwards (placed on top of pcb)
                                :wall 3}  ;; xiao-ble
-
+                  
                   :battery {:additional-positions [[-0.92 0.42]]
                             :w 13
                             :d 32
                             :h 4.3
                             :margin 1}
                   ;;:battery {:w 17.5 :d 31 :h 4.3 :wall 3 :pos [-0.9 0.1]}  ;; 150mAh
+                  
+                  :power-switch {:w 7 :d 10 :h 1.5 :x 3 :y 35}
 
-                  :power-switch {:w 6 :d 10 :h 1.5 :x 3 :y 35}
-
-                  :magnets {:additional-positions [[-0.88 2.8]
-                                                   [-1.55 0.1]
+                  :magnets {:additional-positions [[-0.92 2.8]
+                                                   [-1.56 0.2]
                                                    [4.2 2.8]
                                                    [4.2 -0.8]]
                             :radius 2.5
@@ -75,6 +75,14 @@
                                  :radius 2.5
                                  :height 3
                                  :margin 3}
+                  
+                  :spacer {:additional-positions [[-0.92 2.8]
+                                                  [-1.56 0.2]
+                                                  [-0.65 3.1]
+                                                  [-0.65 -0.35]]
+                           :radius 2.5
+                           :height 1.5
+                           :margin 2}
 
                   :matrix {:offset [33 -8]
                            :clusters {:finger-cluster {:rows 3
@@ -139,7 +147,7 @@
                     [c r])
         positions (concat positions additional)]
     (->> positions
-         (map (fn [[col _ :as pos]]
+         (map (fn [pos]
                 (place-in-cluster-single config
                                          shape
                                          cluster-def
@@ -420,6 +428,18 @@
     (difference layer-outline
                 rubber-feet-indicator)))
 
+(defn spacer-layer [config]
+  (let [{{r :radius 
+          h :height 
+          margin :margin 
+          :as spacer-def} :spacer} config
+        corner (cylinder (+ r margin) h)
+        spacer-corners (place-in-cluster config corner spacer-def)]
+    (color [0.5 0.2 0.2] 
+           (-> (apply hull spacer-corners)
+               (difference (magnets config)))) 
+    ))
+
 
 
 ;; -------------------------------------------------
@@ -430,7 +450,8 @@
   (let [{plate-thickness :plate-thickness} config
         keycaps (place-at-key-positions config (keycap config))
         explode 1
-        layers [(mirror-halves keycaps)
+        layers [(spacer-layer config)
+                (mirror-halves keycaps)
                 ;;(battery config)
                 ;;(controller-cutout config)
                 (mirror-halves (top-layer config))

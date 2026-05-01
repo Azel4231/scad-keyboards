@@ -6,7 +6,7 @@
  (ns scad-keyboards.mk6
    (:refer-clojure :exclude [use import])
    (:require [scad-clj.scad :refer [write-scad]]
-             [scad-clj.model :as scad :refer [translate rotate scale union hull difference cube color mirror cylinder project]]))
+             [scad-clj.model :as scad :refer [translate rotate scale union hull difference cube color mirror cylinder project extrude-linear polygon]]))
 
 (def PI Math/PI)
 
@@ -78,8 +78,8 @@
                   
                   :spacer {:additional-positions [[-0.92 2.8]
                                                   [-1.56 0.2]
-                                                  [-0.65 3.1]
-                                                  [-0.65 -0.35]]
+                                                  [-0.75 3.1]
+                                                  [-0.75 -0.25]]
                            :radius 2.5
                            :height 1.5
                            :margin 2}
@@ -300,6 +300,17 @@
                              (cube w d h))))
          feet-config)))
 
+(defn socket [config]
+  (let [{layer-thickness :plate-thickness} config
+        ;; starting with top left
+        poly (polygon [[-5.75 3] [-1.25 3] [-0.5 1.5] [5.75 1.5] [5.75 -3] [1.25 -3] [0.5 -1.5] [-5.75 -1.5]])
+        body (extrude-linear {:height layer-thickness} poly) 
+        contacts (union (translate [-6.25 0.75 0] (cube 1.5 1.5 layer-thickness))
+                        (translate [6.25 -0.75 0] (cube 1.5 1.5 layer-thickness)))
+        ]
+    (color [0.4 0.4 0.4 1]
+           (translate [0 -4 0] (union body
+                                      contacts)))))
 
 
 ;; -------------------------------------------------
@@ -440,7 +451,9 @@
                (difference (magnets config)))) 
     ))
 
-
+(defn sockets-layer [config]
+  (let [socket (socket config)]
+    (place-at-key-positions config socket)))
 
 ;; -------------------------------------------------
 ;; layer placement
@@ -450,8 +463,9 @@
   (let [{plate-thickness :plate-thickness} config
         keycaps (place-at-key-positions config (keycap config))
         explode 1
-        layers [(spacer-layer config)
-                (mirror-halves keycaps)
+        layers [(sockets-layer config)
+                (spacer-layer config)
+                ;;(mirror-halves keycaps)
                 ;;(battery config)
                 ;;(controller-cutout config)
                 (mirror-halves (top-layer config))
@@ -523,11 +537,12 @@
         variant (create-model variant-config)
         base-model (create-model config)]
     (union base-model
-           #_(translate [0 150 0] variant)
+           #_(translate [0 150 0] variant) 
            (translate [0 0 0] (all-layers config)))))
 
 
 (defn run [config]
+
   (let [{{fa :fa
           fn :fn
           fs :fs} :quality} config]

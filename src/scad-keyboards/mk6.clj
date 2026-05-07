@@ -23,8 +23,11 @@
                   ;; cutout for each keycap is key-distance + keycap-kerf
                   :keycap-kerf 0.75
                   :plate-thickness 1.5
+                  ;; Defines the outer edge. Keyholes + the defined margins
                   ;; initially 3.5, make more room for errors
-                  :plate-border {:top 4.5 :bottom 4.5 :inner 6 :outer 4.5}
+                  :plate-margin {:top 4.5 :bottom 4.5 :inner 6 :outer 4.5}
+                  ;; defines the inner edge of the frame layers. Keyholes + the defined margins. 
+                  :frame-margin 3
                   :keycap-dimensions {:x 18 :y 18 :z 10}
                   :wood-color [0.98 0.92 0.6 1]
 
@@ -38,7 +41,7 @@
                                 {:w 10 :d 2 :h 2 :x 12 :y 65}  ;; vertical distance to bottom feet (64.75mm (3.5 * 18.5mm) and 83.25 (4.5 * 18.5mm))
                                 {:w 2 :d 10 :h 2 :x 101.5 :y 0.25}  ;; between -_ and R-shift
                                 {:w 2 :d 10 :h 2 :x 44.5 :y -18.25} ;; right of spacebar
-                                
+
                                 ;; left
                                 {:w 10 :d 2 :h 2 :x -116 :y 65}
                                 {:w 10 :d 2 :h 2 :x -12 :y 65}
@@ -52,14 +55,14 @@
                                :usbc-y 1.5 ;; 1.5mm overhang (top of controller)
                                :usbc-z 1.5 ;; 1.5mm upwards (placed on top of pcb)
                                :wall 3}  ;; xiao-ble
-                  
+
                   :battery {:additional-positions [[-0.92 0.42]]
                             :w 13
                             :d 32
                             :h 4.3
                             :margin 1}
                   ;;:battery {:w 17.5 :d 31 :h 4.3 :wall 3 :pos [-0.9 0.1]}  ;; 150mAh
-                  
+
                   :power-switch {:w 7 :d 10 :h 1.5 :x 3 :y 35}
 
                   :magnets {:additional-positions [[-0.92 2.8]
@@ -75,7 +78,7 @@
                                  :radius 2.5
                                  :height 3
                                  :margin 3}
-                  
+
                   :spacer {:additional-positions [[-0.92 2.8]
                                                   [-1.56 0.2]
                                                   [-0.75 3.1]
@@ -171,17 +174,20 @@
    (mirror-halves shape 0))
   ([shape offset]
    (let [clean-shape (translate [offset 0 0] (half shape))]
-     (union clean-shape 
+     (union clean-shape
             (mirror [1 0 0] clean-shape)))))
 
 ;; -------------------------------------------------
 ;; objects
 ;; -------------------------------------------------
 
-(defn single-key-hole [config x-kerf y-kerf]
-  (let [{{cutout-width :x
-          cutout-height :y} :cutout-dimensions} config]
-    (cube (+ cutout-width x-kerf) (+ cutout-height y-kerf) 10)))
+(defn single-key-hole
+  ([config x-kerf y-kerf height]
+   (let [{{cutout-width :x
+           cutout-height :y} :cutout-dimensions} config]
+     (cube (+ cutout-width x-kerf) (+ cutout-height y-kerf) height)))
+  ([config x-kerf y-kerf]
+   (single-key-hole config x-kerf y-kerf 10)))
 
 
 (defn keycap [config]
@@ -281,7 +287,7 @@
           h :h
           margin :margin} :battery} config
         battery (cube (+ w margin) (+ d margin) h)
-        battery-cutout (hull battery 
+        battery-cutout (hull battery
                              (translate [(* w 1/4) (* d 1) 0] ;; align right
                                         (cube (* w 1/2) (* d 1/2) h)))]
     (place-in-cluster config
@@ -300,17 +306,20 @@
                              (cube w d h))))
          feet-config)))
 
-(defn socket [config]
-  (let [{layer-thickness :plate-thickness} config
-        ;; starting with top left
-        poly (polygon [[-5.75 3] [-1.25 3] [-0.5 1.5] [5.75 1.5] [5.75 -3] [1.25 -3] [0.5 -1.5] [-5.75 -1.5]])
-        body (extrude-linear {:height layer-thickness} poly) 
-        contacts (union (translate [-6.25 0.75 0] (cube 1.5 1.5 layer-thickness))
-                        (translate [6.25 -0.75 0] (cube 1.5 1.5 layer-thickness)))
-        ]
-    (color [0.4 0.4 0.4 1]
-           (translate [0 -4 0] (union body
-                                      contacts)))))
+(defn socket
+  ([config height]
+   (let [;; starting with top left
+         poly (polygon [[-5.75 3] [-1.25 3] [-0.5 1.5] [5.75 1.5] [5.75 -3] [1.25 -3] [0.5 -1.5] [-5.75 -1.5]])
+         body (extrude-linear {:height height} poly)
+         contacts (union (translate [-6.25 0.75 0] (cube 1.5 1.5 height))
+                         (translate [6.25 -0.75 0] (cube 1.5 1.5 height)))]
+     (color [0.3 0.3 0.4 1]
+            (translate [-0.75 -4 0] (union body
+                                           contacts)))) )
+  ([config]
+   (let [{layer-thickness :plate-thickness} config]
+     (socket config layer-thickness))
+   ))
 
 
 ;; -------------------------------------------------
@@ -319,7 +328,7 @@
 
 (defn base-outline [config]
   (let [{plate-thickness :plate-thickness
-         {top :top bottom :bottom inner :inner outer :outer} :plate-border
+         {top :top bottom :bottom inner :inner outer :outer} :plate-margin
          {cap-x :x
           cap-y :y} :keycap-dimensions
          {{finger-cluster :finger-cluster
@@ -342,7 +351,7 @@
          (cons top-helper)
          (cons bottom-helper)
          (apply hull)
-         #_(minkowski2 (cylinder plate-border 0.01))
+         #_(minkowski2 (cylinder plate-margin 0.01))
          #_(mirror-halves)
          (half)
          (color wood-color))))
@@ -356,8 +365,7 @@
         cap-cutouts (place-at-key-positions config
                                             (cube (+ cap-x (* 2 kerf))
                                                   (+ cap-y (* 2 kerf))
-                                                  25))
-        ]
+                                                  25))]
     (difference base-outline
                 (mirror-halves cap-cutouts))))
 
@@ -369,8 +377,8 @@
                  cutouts
                  cutouts-other))))
 
-           
-(defn plate-layer-upper [config] 
+
+(defn plate-layer-upper [config]
   (difference (plate-layer config
                            (single-key-hole config 0 0)
                            [])
@@ -384,21 +392,18 @@
                                        (cube w d 5))
         controller-cutout (controller-cutout config)
         magnet-cutouts (magnets config)
-        case-magnet-cutouts (magnets-case config)
-        ]
+        case-magnet-cutouts (magnets-case config)]
     (difference (plate-layer config
                              (single-key-hole config 0 1.2)
                              (union magnet-cutouts
                                     case-magnet-cutouts
                                     controller-cutout
-                                    power-switch-cutout
-                                    )))))
+                                    power-switch-cutout)))))
 
 (defn plate-layer-lower2 [config]
   (let [battery-cut (battery-cutout config)
         controller-cutout (controller-cutout config)
-        case-magnet-cutouts (magnets-case config)
-        ]
+        case-magnet-cutouts (magnets-case config)]
     (plate-layer config
                  (single-key-hole config -0.5 -0.5)
                  (union battery-cut
@@ -406,27 +411,33 @@
                         case-magnet-cutouts))))
 
 
-(defn frame-layer [config]
-  (let [base-outline (base-outline config)
+(defn frame-layer-base [config]
+  (let [{margin :frame-margin} config
+        base-layer (base-outline config)
         ;; TODO add controller and battery
-        cutout (apply hull (place-at-key-positions config (single-key-hole config 0 0)))  
+        cutout (apply hull (place-at-key-positions config (single-key-hole config margin margin)))
         battery (battery-cutout config)
         controller (controller-cutout config)
-        cutout (hull cutout 
+        cutout (hull cutout
                      battery
-                     controller)
+                     controller)]
+    (-> base-layer
+        (difference cutout))))
+
+(defn frame-layer [config]
+  (let [base-layer (base-outline config)
+        base-frame (frame-layer-base config)
+        controller (controller-cutout config)
+        battery (battery-cutout config)
         magnets-cutouts (magnets config)
-        case-magnet-cutouts (magnets-case config) 
-        magnets-struts (difference (scad/intersection base-outline (magnets-struts config))
+        case-magnet-cutouts (magnets-case config)
+        magnets-struts (difference (scad/intersection base-layer (magnets-struts config))
                                    battery controller)
-        case-struts (scad/intersection base-outline (magnets-case-struts config)) 
-        ]
-    (-> base-outline
-        (difference cutout)
+        case-struts (scad/intersection base-layer (magnets-case-struts config))]
+    (-> base-frame
         (union case-struts)
         (union magnets-struts)
-        (difference magnets-cutouts case-magnet-cutouts)
-        )))
+        (difference magnets-cutouts case-magnet-cutouts))))
 
 (defn bottom-layer [config]
   (base-outline config))
@@ -440,20 +451,26 @@
                 rubber-feet-indicator)))
 
 (defn spacer-layer [config]
-  (let [{{r :radius 
-          h :height 
-          margin :margin 
+  (let [{{r :radius
+          h :height
+          margin :margin
           :as spacer-def} :spacer} config
         corner (cylinder (+ r margin) h)
         spacer-corners (place-in-cluster config corner spacer-def)]
-    (color [0.5 0.2 0.2] 
+    (color [0.5 0.2 0.2]
            (-> (apply hull spacer-corners)
-               (difference (magnets config)))) 
-    ))
+               (difference (magnets config))))))
 
 (defn sockets-layer [config]
-  (let [socket (socket config)]
-    (place-at-key-positions config socket)))
+  (let [{layer-height :plate-thickness
+         margin :frame-margin} config
+        socket (socket config 5)
+        frame (frame-layer-base config)
+        magnets (magnets-case config)]
+    (difference (base-outline config)
+                (place-at-key-positions config socket)
+                (scale [1 1 5] frame)
+                magnets)))
 
 ;; -------------------------------------------------
 ;; layer placement
@@ -495,8 +512,7 @@
                 [bottom-layer [x (- (* 2 y)) 0]]
                 ;; Helper layer. Not intended for cutting holes anywhere, just to provide the tool path for engraving the rubber feet positions onto the bottom layer. The layer outline is there to help with alignment. 
                 ;; rubber-feet-outline-layer [x 0 0]
-                ] 
-        ]
+                ]]
     (union
      (map (fn [[layer-fn transform]]
             (translate transform (mirror-halves (layer-fn config) mirror-offset)))
@@ -537,7 +553,7 @@
         variant (create-model variant-config)
         base-model (create-model config)]
     (union base-model
-           #_(translate [0 150 0] variant) 
+           #_(translate [0 150 0] variant)
            (translate [0 0 0] (all-layers config)))))
 
 
